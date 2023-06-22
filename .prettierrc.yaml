@@ -1,0 +1,22 @@
+# Prettier Configuration
+
+# Tab width of 2 spaces
+tabWidth: 2
+
+# Use single quotes for strings
+singleQuote: true
+
+# Preserve end of line characters as-is
+endOfLine: auto
+
+# Use trailing commas in all arrays and objects
+trailingComma: all
+
+# Overrides for CSS and HTML files
+overrides:
+  - files:
+      - '**/*.css'
+      - '**/*.html'
+    options:
+      # Disable single quotes for CSS and HTML files
+      singleQuote: false
