@@ -22,7 +22,7 @@ This is a private project and is not open source. The project is not intended fo
 1. Install node.js v18.16.1
 2. Run `npm install`.
 3. Run `npm run start`.
-4. By default, access the application from `localhost:3000`.
+4. By default, access the application from `localhost:8000`.
 
 ## License
 
