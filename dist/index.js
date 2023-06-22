@@ -10,7 +10,7 @@ app.get("/", (req, res) => {
     res.send("HELLO FROM EXPRESS + TS!!!!");
 });
 app.get("/hi", (req, res) => {
-    res.send("BYEEE!!");
+    res.send("HI!!!!!!!");
 });
 app.listen(port, () => {
     console.log(`now listening on port ${port}`);
