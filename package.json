@@ -10,7 +10,7 @@
     "preserve": "npm run build",
     "serve": "concurrently \"npx tsc -w\"  \"nodemon dist/index.js\"",
     "prettify-all": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,scss,json,yaml}\"",
-    "prepare": "husky install"
+    "prepare": "husky install | chmod ug+x .husky/*"
   },
   "keywords": [],
   "author": "",
