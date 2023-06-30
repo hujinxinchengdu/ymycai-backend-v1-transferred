@@ -1,16 +1,37 @@
-import express, { Express, Request, Response } from 'express';
-const port = 8000;
+import 'reflect-metadata';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import router from './router/routes';
+import { AppDataSource } from './configuration';
 
-const app: Express = express();
+require('express-async-errors');
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('HELLO FROM EXPRESS + TS!!!!');
-});
+const app = express();
 
-app.get('/hi', (req: Request, res: Response) => {
-  res.send('HI');
-});
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use('/', router);
 
-app.listen(port, () => {
-  console.log(`now listening on port ${port}`);
-});
+// Global error handler
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'An error occurred.' });
+  },
+);
+
+const PORT = process.env.PORT || 8111;
+
+// Initialize database and start the server
+AppDataSource.initialize()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((error) => console.log(error));
