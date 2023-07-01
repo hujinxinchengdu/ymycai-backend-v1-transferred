@@ -9,7 +9,7 @@ POST /photo
 Description:
 Saves a photo
 
-Payload:
+Photo:
 - name: string, required, the name of the photo
 - description: string, required, the description of the photo
 - filename: string, required, the filename of the photo
