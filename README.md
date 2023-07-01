@@ -1,29 +1,192 @@
 # Stockaid Backend
 
-## About
+# API Example
 
-This is a private project and is not open source. The project is not intended for public access or code sharing. It is meant for internal use or access by authorized individuals only.
+API文档例子
+```
+POST /photo
 
-## Links
+Description:
+Saves a photo
 
-- [Sparkland](https://app.yesspark.io/hub/6413a9c4b9c8c790af90199c)
-- [Figma](https://www.figma.com/file/AwR9i76Je4LrDIG5loVEH4/Road-Map?type=whiteboard&node-id=0-1&t=sI1vszStNdw7wY4c-0)
-- [Postman](https://stockaid.postman.co/)
+Photo:
+- name: string, required, the name of the photo
+- description: string, required, the description of the photo
+- filename: string, required, the filename of the photo
+- views: number, required, the view count of the photo
+- isPublished: boolean, required, whether the photo is published
 
-## Development Setup
+Response:
+- A Photo object if the operation was successful
+- An error message if something went wrong
 
-### Pre-commit hooks
+Status codes:
+- 201: Created, the photo was successfully saved
+- 400: Bad Request, the request was invalid or could not be processed
+- 500: Internal Server Error, something went wrong on the server
 
-- No need for extra steps if you do not use ***Github Desktop***:
-  - Github Desktop is not compatible with pre-commit hooks because the Git version included with GitHub Desktop is a compressed edition. You can work around this problem by replacing the bundled Git in GitHub Desktop with the official version of Git. Please refer to [the solution here](https://blog.csdn.net/weixin_40920751/article/details/121970779)
+```
 
-### Installation
+## 请求的方法
 
-1. Install node.js v18.16.1
-2. Run `npm install`.
-3. Run `npm run start`.
-4. By default, access the application from `localhost:8000`.
+DataModel
+```ts
+// 在前端定义的 Photo 接口
+interface Photo {
+  name: string;
+  description: string;
+  filename: string;
+  views: number;
+  isPublished: boolean;
+}
 
-## License
+// 创建一个 Photo 对象
+const newPhoto: Photo = {
+  name: "Me and Bears",
+  description: "I am near polar bears",
+  filename: "photo-with-bears.jpg",
+  views: 1,
+  isPublished: true
+};
 
-Please note that this project does not provide an open source license. Unauthorized copying, distribution, or modification of the project's code and resources is strictly prohibited.
+// 使用 axios 发送 POST 请求
+axios.post('http://your-api-url/photo', newPhoto)
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+    console.error(error);
+  });
+
+```
+## 响应:
+
+返回一个表示保存成功的照片的 JSON 对象。
+```json
+{
+  "id": 1,
+  "name": "Me and Bears",
+  "description": "I am near polar bears",
+  "filename": "photo-with-bears.jpg",
+  "views": 1,
+  "isPublished": true
+}
+```
+
+定义DataModel
+```ts
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Photo {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ length: 100 })
+  name: string;
+
+  @Column('text')
+  description: string;
+
+  @Column()
+  filename: string;
+
+  @Column('int')
+  views: number;
+
+  @Column()
+  isPublished: boolean;
+}
+```
+
+定义相关router
+```ts
+import express from 'express';
+import { savePhoto, findPhoto } from '../controllers';
+
+const router = express.Router();
+
+router.post('/photo', async (req, res) => {
+  try {
+    const photo = await savePhoto(req.body);
+    res.status(201).json(photo);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/photos', async (req, res) => {
+  try {
+    const photos = await findPhoto();
+    res.json(photos);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+export default router;
+```
+
+执行操作
+```ts
+import { Photo } from '../models';
+import { AppDataSource } from '../configuration';
+
+export async function savePhoto(photoData: Partial<Photo>): Promise<Photo> {
+  const photo = new Photo();
+  photo.name = photoData.name || 'Default Name';
+  photo.description = photoData.description || 'Default Description';
+  photo.filename = photoData.filename || 'default.jpg';
+  photo.views = photoData.views || 0;
+  photo.isPublished = photoData.isPublished || false;
+
+  try {
+    const savedPhoto = await AppDataSource.manager.save(photo);
+    return savedPhoto;
+  } catch (error) {
+    throw new Error(`Error while saving photo: ${error.message}`);
+  }
+}
+
+export async function findPhoto(): Promise<Photo[]> {
+  try {
+    const savedPhotos = await AppDataSource.manager.find(Photo);
+    return savedPhotos;
+  } catch (error) {
+    throw new Error(`Error while fetching photos: ${error.message}`);
+  }
+}
+```
+
+最后在datasource中注册实体
+```ts
+import { config } from 'dotenv';
+import { DataSource } from 'typeorm';
+import { Photo } from '../models';
+import * as fs from 'fs';
+
+if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
+  config({ path: `.env.${process.env.NODE_ENV}` });
+} else {
+  console.log('Using default .env file');
+  config();
+}
+
+const host: string = process.env.HOST as string;
+const port: number = parseInt(process.env.DATABASE_PORT as string, 10);
+const username: string = process.env.USERNAME as string;
+const password: string = process.env.PASSWORD as string;
+const database: string = process.env.DATABASE as string;
+
+export const AppDataSource = new DataSource({
+  type: 'postgres',
+  host: host,
+  port: port,
+  username: username,
+  password: password,
+  database: database,
+  entities: [Photo],
+  synchronize: true,
+  logging: false,
+});
+```
