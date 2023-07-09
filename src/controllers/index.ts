@@ -1,1 +1,1 @@
-export * from './phote.usecase';
+export * from './example';

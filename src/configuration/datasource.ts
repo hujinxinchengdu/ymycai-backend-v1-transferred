@@ -1,6 +1,22 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
-import { Photo } from '../models';
+import {
+  Company,
+  User,
+  Tag,
+  TradingNote,
+  Watchlist,
+  WatchlistToCompany,
+  FinancialReport,
+  FinancialAnalysis,
+  MarketData,
+  TechnicalIndicator,
+  LongtermSignal,
+  News,
+  Topic,
+  Recommendation,
+  NewsToCompanies,
+} from '../models';
 import * as fs from 'fs';
 
 if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
@@ -23,7 +39,23 @@ export const AppDataSource = new DataSource({
   username: username,
   password: password,
   database: database,
-  entities: [Photo],
+  entities: [
+    Company,
+    User,
+    Tag,
+    TradingNote,
+    Watchlist,
+    WatchlistToCompany,
+    FinancialReport,
+    FinancialAnalysis,
+    MarketData,
+    TechnicalIndicator,
+    LongtermSignal,
+    News,
+    Topic,
+    Recommendation,
+    NewsToCompanies,
+  ],
   synchronize: true,
   logging: false,
 });
