@@ -57,3 +57,4 @@ class News {
 }
 
 export { News };
+
