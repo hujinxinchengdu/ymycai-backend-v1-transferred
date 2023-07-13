@@ -25,11 +25,17 @@ class Company {
   @PrimaryColumn({ type: 'varchar' })
   company_id: string;
 
-  @Column({ type: 'json' })
-  business_summary: any;
+  @Column({ type: 'varchar' })
+  company_name: string;
+
+  @Column({ type: 'varchar' })
+  company_symbol: string;
 
   @Column({ type: 'text' })
-  research_dev_invest: string;
+  business_summary: string;
+
+  @Column({ type: 'text' })
+  industry_position: string;
 
   @Column({ type: 'timestamp' })
   established_time: Date;

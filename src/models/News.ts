@@ -41,9 +41,6 @@ class News {
   @CreateDateColumn()
   ai_summery_time: Date;
 
-  @Column({ type: 'double precision' })
-  important_source: number;
-
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];
 
@@ -57,4 +54,3 @@ class News {
 }
 
 export { News };
-
