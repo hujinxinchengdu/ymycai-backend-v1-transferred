@@ -1,7 +1,7 @@
 import express from 'express';
 
 // import { savePhoto, findPhoto } from '../controllers';
-
+import { saveNews, findNews } from '../controllers';
 
 const router = express.Router();
 
