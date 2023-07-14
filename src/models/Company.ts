@@ -32,7 +32,7 @@ class Company {
   company_symbol: string;
 
   @Column({ type: 'text' })
-  business_summary: string;
+  company_infomation: string;
 
   @Column({ type: 'text' })
   industry_position: string;

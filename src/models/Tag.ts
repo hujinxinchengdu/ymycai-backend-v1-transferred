@@ -9,6 +9,15 @@ class Tag {
   @Column({ type: 'varchar' })
   type: string;
 
+  @Column({ type: 'varchar' })
+  industry_cn: string;
+
+  @Column({ type: 'varchar' })
+  industry_en: string;
+
+  @Column({ type: 'varchar' })
+  code: string;
+
   @ManyToMany(() => Company, (company) => company.tags)
   companies: Company[];
 }

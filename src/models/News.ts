@@ -41,6 +41,12 @@ class News {
   @CreateDateColumn()
   ai_summery_time: Date;
 
+  @Column({ type: 'text' })
+  ai_summery_en: string;
+
+  @Column({ type: 'text' })
+  ai_summery_cn: string;
+
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];
 
