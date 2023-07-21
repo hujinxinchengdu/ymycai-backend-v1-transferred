@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { TimestampTransformer } from 'typeorm-timestamp-transformer';
+
 @Entity()
 export class News {
   @PrimaryGeneratedColumn()
@@ -11,7 +11,7 @@ export class News {
   @Column()
   url: string;
 
-  @Column({ type: 'timestamp', transformer: new TimestampTransformer() })
+  @Column({ type: 'timestamp' })
   publishedTime: Date | undefined;
 
   @Column()
@@ -23,7 +23,7 @@ export class News {
   @Column()
   overallSentimentLable: string;
 
-  @Column({ type: 'timestamp', transformer: new TimestampTransformer() })
+  @Column({ type: 'timestamp' })
   aiSummeryTime: Date | undefined;
 
   @Column()
