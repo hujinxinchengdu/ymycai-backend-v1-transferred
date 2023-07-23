@@ -8,9 +8,9 @@
     "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "prettify-all": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,scss,json,yaml}\"",
     "prepare": "husky install",
-    "start:local_dev": "NODE_ENV=local_dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
+    "start:local_dev": "cross-env NODE_ENV=local_dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start:dev": "NODE_ENV=dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
-    "start:cloud_dev": "NODE_ENV=cloud_dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
+    "start:cloud_dev": "cross-env NODE_ENV=cloud_dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start:local_product": "NODE_ENV=local_product nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start:product": "NODE_ENV=product nodemon --watch './**/*.ts' --exec ts-node src/index.ts"
   },
