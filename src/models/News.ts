@@ -1,31 +1,56 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 
-@Entity()
-export class News {
-  @PrimaryGeneratedColumn()
-  newsId: number;
+import { NewsToCompanies, Topic } from '../models';
 
-  @Column({ length: 100 })
+@Entity('news')
+class News {
+  @PrimaryColumn({ type: 'varchar' })
+  news_id: string;
+
+  @Column({ type: 'varchar' })
   title: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   url: string;
 
-  @Column({ type: 'timestamp' })
-  publishedTime: Date | undefined;
+  @CreateDateColumn()
+  published_time: Date;
 
-  @Column()
-  bannerImage: string;
+  @Column({ type: 'varchar' })
+  banner_image: string;
 
-  @Column('decimal', { precision: 10, scale: 5 })
-  overallSentimentScore: number;
+  @Column({ type: 'double precision' })
+  source: number;
 
-  @Column()
-  overallSentimentLable: string;
+  @Column({ type: 'double precision' })
+  overall_sentiment_score: number;
 
-  @Column({ type: 'timestamp' })
-  aiSummeryTime: Date | undefined;
+  @Column({ type: 'double precision' })
+  overall_sentiment_label: number;
 
-  @Column()
-  importantSource: string;
+  @CreateDateColumn()
+  ai_summery_time: Date;
+
+  @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
+  companyConnection: NewsToCompanies[];
+
+  @ManyToMany(() => Topic, (topic) => topic.news)
+  @JoinTable({
+    name: 'topics_to_news',
+    joinColumn: { name: 'news_id', referencedColumnName: 'news_id' },
+    inverseJoinColumn: { name: 'topic_id', referencedColumnName: 'topic_id' },
+  })
+  topics: Topic[];
 }
+
+export { News };
