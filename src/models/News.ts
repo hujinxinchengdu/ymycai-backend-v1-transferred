@@ -2,8 +2,6 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   OneToMany,
   ManyToMany,
@@ -29,23 +27,23 @@ class News {
   @Column({ type: 'varchar' })
   banner_image: string;
 
-  @Column({ type: 'double precision' })
-  source: number;
+  @Column({ type: 'varchar' })
+  source: string;
 
   @Column({ type: 'double precision' })
   overall_sentiment_score: number;
 
-  @Column({ type: 'double precision' })
-  overall_sentiment_label: number;
+  @Column({ type: 'varchar' })
+  overall_sentiment_label: string;
 
   @CreateDateColumn()
-  ai_summery_time: Date;
+  ai_summary_time: Date;
 
   @Column({ type: 'text' })
-  ai_summery_en: string;
+  ai_summary_en: string;
 
   @Column({ type: 'text' })
-  ai_summery_cn: string;
+  ai_summary_cn: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];

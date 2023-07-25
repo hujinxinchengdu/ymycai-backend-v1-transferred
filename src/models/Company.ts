@@ -28,11 +28,14 @@ class Company {
   @Column({ type: 'varchar' })
   company_name: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   company_symbol: string;
 
+  @Column({ type: 'varchar' })
+  company_industry: string;
+
   @Column({ type: 'text' })
-  company_infomation: string;
+  company_information: string;
 
   @Column({ type: 'text' })
   industry_position: string;
