@@ -1,5 +1,5 @@
-import { News } from '../models';
-import { AppDataSource } from '../configuration';
+// import { News } from '../models';
+// import { AppDataSource } from '../configuration';
 
 async function saveNews(newsData: Partial<News>): Promise<News> {
   const news = new News();
@@ -11,21 +11,22 @@ async function saveNews(newsData: Partial<News>): Promise<News> {
   news.overall_sentiment_label = newsData.overall_sentiment_label || '';
   news.ai_summery_time = newsData.ai_summery_time || new Date();
 
-  try {
-    const savedNews = await AppDataSource.manager.save(news);
-    return savedNews;
-  } catch (error) {
-    throw new Error(`Error while saving news: ${error.message}`);
-  }
-}
+//   try {
+//     const savedNews = await AppDataSource.manager.save(news);
+//     return savedNews;
+//   } catch (error) {
+//     throw new Error(`Error while saving news: ${error.message}`);
+//   }
+// }
 
-async function findNews(): Promise<News[]> {
-  try {
-    const savedNews = await AppDataSource.manager.find(News);
-    return savedNews;
-  } catch (error) {
-    throw new Error(`Error while fetching new: ${error.message}`);
-  }
-}
+// async function findNews(): Promise<News[]> {
+//   try {
+//     const savedNews = await AppDataSource.manager.find(News);
+//     return savedNews;
+//   } catch (error) {
+//     throw new Error(`Error while fetching new: ${error.message}`);
+//   }
+// }
 
-export { findNews, saveNews };
+// export { findNews, saveNews };
+export {};

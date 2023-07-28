@@ -2,8 +2,6 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   OneToMany,
   ManyToMany,
@@ -39,7 +37,13 @@ class News {
   overall_sentiment_label: string;
 
   @CreateDateColumn()
-  ai_summery_time: Date;
+  ai_summary_time: Date;
+
+  @Column({ type: 'text' })
+  ai_summary_en: string;
+
+  @Column({ type: 'text' })
+  ai_summary_cn: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];
