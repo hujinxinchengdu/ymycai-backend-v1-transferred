@@ -39,10 +39,10 @@ class News {
   @CreateDateColumn()
   ai_summary_time: Date;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: 'n/a' })
   ai_summary_en: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: 'n/a' })
   ai_summary_cn: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
