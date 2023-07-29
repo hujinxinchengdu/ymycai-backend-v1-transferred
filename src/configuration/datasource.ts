@@ -30,7 +30,7 @@ if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
 
 const host: string = process.env.HOST as string;
 const port: number = parseInt(process.env.DATABASE_PORT as string, 10);
-const username: string = process.env.USERNAME as string;
+const username: string = process.env.USER_NAME as string;
 const password: string = process.env.PASSWORD as string;
 const database: string = process.env.DATABASE as string;
 
