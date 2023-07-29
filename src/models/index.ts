@@ -1,4 +1,3 @@
-
 export * from './Company';
 export * from './Tag';
 export * from './Watchlist';
@@ -14,4 +13,3 @@ export * from './News';
 export * from './Recommendation';
 export * from './NewsToCompanies';
 export * from './Topic';
-

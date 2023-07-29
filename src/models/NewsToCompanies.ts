@@ -26,8 +26,8 @@ class NewsToCompanies {
   @Column({ type: 'double precision' })
   ticker_sentiment_score: number;
 
-  @Column({ type: 'double precision' })
-  ticker_sentiment_label: number;
+  @Column({ type: 'varchar' })
+  ticker_sentiment_label: string;
 
   @ManyToOne(() => News, (news) => news.companyConnection)
   @JoinColumn({ name: 'news_id' })
