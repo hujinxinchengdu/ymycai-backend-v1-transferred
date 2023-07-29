@@ -10,7 +10,6 @@ async function saveNews(newsData: Partial<News>): Promise<News> {
   news.overall_sentiment_score = newsData.overall_sentiment_score || 0;
   news.overall_sentiment_label = newsData.overall_sentiment_label || 'N/A';
   news.ai_summary_time = newsData.ai_summary_time || new Date();
-
   try {
     const savedNews = await AppDataSource.manager.save(news);
     return savedNews;
@@ -56,4 +55,4 @@ async function findNewsByCompany(ticker: String): Promise<News[]> {
   }
 }
 
-export { findNews, saveNews, findNewsByTopic };
+export { findNews, saveNews, findNewsByTopic, findNewsByCompany };

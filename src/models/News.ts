@@ -2,8 +2,6 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   OneToMany,
   ManyToMany,
@@ -41,10 +39,10 @@ class News {
   @CreateDateColumn()
   ai_summary_time: Date;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', default: 'n/a' })
   ai_summary_en: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', default: 'n/a' })
   ai_summary_ch: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
