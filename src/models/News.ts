@@ -29,17 +29,23 @@ class News {
   @Column({ type: 'varchar' })
   banner_image: string;
 
-  @Column({ type: 'double precision' })
-  source: number;
+  @Column({ type: 'varchar' })
+  source: string;
 
   @Column({ type: 'double precision' })
   overall_sentiment_score: number;
 
-  @Column({ type: 'double precision' })
-  overall_sentiment_label: number;
+  @Column({ type: 'varchar' })
+  overall_sentiment_label: string;
 
   @CreateDateColumn()
-  ai_summery_time: Date;
+  ai_summary_time: Date;
+
+  @Column({ type: 'varchar' })
+  ai_summary_en: string;
+
+  @Column({ type: 'varchar' })
+  ai_summary_ch: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];

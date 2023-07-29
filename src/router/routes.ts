@@ -1,7 +1,7 @@
 import express from 'express';
 
 // import { savePhoto, findPhoto } from '../controllers';
-import { saveNews, findNews } from '../controllers';
+import { saveNews, findNews, findNewsByTopic } from '../controllers';
 
 const router = express.Router();
 
@@ -35,6 +35,16 @@ router.post('/news', async (req, res) => {
 router.get('/news', async (req, res) => {
   try {
     const news = await findNews();
+    res.json(news);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/news/:topic', async (req, res) => {
+  try {
+    const topicName = req.params.topic;
+    const news = await findNewsByTopic(topicName);
     res.json(news);
   } catch (error) {
     res.status(500).json({ error: error.toString() });
