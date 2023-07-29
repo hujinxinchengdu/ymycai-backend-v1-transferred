@@ -55,4 +55,29 @@ async function findNewsByCompany(ticker: String): Promise<News[]> {
   }
 }
 
-export { findNews, saveNews, findNewsByTopic, findNewsByCompany };
+async function updateNewsSummary(
+  news_id: string,
+  aiSummary: string,
+): Promise<{ news_id: string }> {
+  try {
+    const newsToUpdate = await AppDataSource.manager.findOne(News, {
+      where: { news_id: news_id },
+    });
+    if (!newsToUpdate) {
+      throw new Error('News not found');
+    }
+    newsToUpdate.ai_summary_en = aiSummary;
+    const updatedNews = await AppDataSource.manager.save(newsToUpdate);
+    return updatedNews;
+  } catch (error) {
+    throw new Error(`Error while updating news summary: ${error.message}`);
+  }
+}
+
+export {
+  findNews,
+  saveNews,
+  findNewsByTopic,
+  findNewsByCompany,
+  updateNewsSummary,
+};
