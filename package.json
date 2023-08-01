@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "## About",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.16.1"
+  },
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
