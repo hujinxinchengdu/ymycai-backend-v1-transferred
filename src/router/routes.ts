@@ -9,6 +9,7 @@ import {
   updateNewsSummary,
 } from '../controllers';
 import { getCompanyInfoAndTags } from '../controllers/CompanyInfo';
+import { getMarketData } from '../services/MarketDataService';
 
 const router = express.Router();
 
@@ -48,6 +49,14 @@ router.put('/news/:newsId', async (req, res) => {
     const aiSummary = req.body.ai_summary;
     const updatedNews = await updateNewsSummary(newsId, aiSummary);
     res.json(updatedNews);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/marketData', async (req, res) => {
+  try {
+    const marketData = getMarketData();
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }
