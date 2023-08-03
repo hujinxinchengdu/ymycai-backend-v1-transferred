@@ -37,7 +37,7 @@ const port: number = parseInt(process.env.DATABASE_PORT as string, 10);
 const username: string = process.env.DB_USER as string;
 const password: string = process.env.PASSWORD as string;
 const database: string = process.env.DATABASE as string;
-
+console.log(username);
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: host,
@@ -64,6 +64,6 @@ export const AppDataSource = new DataSource({
     NewsToCompanies,
   ],
 
-  synchronize: true,
+  synchronize: false,
   logging: false,
 });
