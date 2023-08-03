@@ -1,15 +1,17 @@
 import { MarketData, News } from '../models';
 import { AppDataSource } from '../configuration';
 
-async function saveMarketData(
-  newMarketData: Partial<MarketData>,
-): Promise<MarketData> {
-  const tempMarketData = new MarketData();
-
+async function saveMarketHistoricalData(
+  newMarketHisData: MarketData[],
+): Promise<void> {
+  console.log('saveMarketHistoricalData');
+  console.log(newMarketHisData);
   try {
-    const saveMarketData = await AppDataSource.manager.save(tempMarketData);
-    return saveMarketData;
+    for (const data of newMarketHisData) {
+      await AppDataSource.manager.save(data);
+    }
   } catch (error) {
-    throw new Error(`Error while saving news: ${error.message}`);
+    throw error;
   }
 }
+export { saveMarketHistoricalData };

@@ -2,14 +2,13 @@ import express from 'express';
 
 // import { savePhoto, findPhoto } from '../controllers';
 import {
-  saveNews,
-  findNews,
   findNewsByTopic,
   findNewsByCompany,
   updateNewsSummary,
+  saveMarketHistoricalData,
 } from '../controllers';
 import { getCompanyInfoAndTags } from '../controllers/CompanyInfo';
-import { getMarketData } from '../services/MarketDataService';
+import { getMarketHistoricalData } from '../services/MarketDataService';
 
 const router = express.Router();
 
@@ -54,9 +53,10 @@ router.put('/news/:newsId', async (req, res) => {
   }
 });
 
-router.get('/marketData', async (req, res) => {
+router.get('/marketHistoricalData', async (req, res) => {
   try {
-    const marketData = getMarketData();
+    const marketData = await getMarketHistoricalData();
+    const response = await saveMarketHistoricalData(marketData);
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }
