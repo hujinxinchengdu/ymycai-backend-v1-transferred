@@ -1,15 +1,22 @@
-import { MarketData, News } from '../models';
+import { MarketData } from '../models';
 import { AppDataSource } from '../configuration';
+import { getAllCompanies } from './company_infomation';
+import { getMarketHistoricalData } from '../services';
 
-async function saveMarketHistoricalData(
-  newMarketHisData: MarketData[],
-): Promise<void> {
-  console.log('saveMarketHistoricalData');
-  console.log(newMarketHisData);
+async function saveMarketHistoricalData(): Promise<void> {
   try {
-    for (const data of newMarketHisData) {
-      await AppDataSource.manager.save(data);
+    const companies = await getAllCompanies();
+    for (const company of companies) {
+      const companySymbol = company.company_symbol;
+      const companyMarketData = await getMarketHistoricalData(
+        company.company_id,
+        companySymbol,
+      );
+      for (const marketData of companyMarketData) {
+        await AppDataSource.manager.save(marketData);
+      }
     }
+    return;
   } catch (error) {
     throw error;
   }
