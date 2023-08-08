@@ -2,14 +2,15 @@ import express from 'express';
 
 // import { savePhoto, findPhoto } from '../controllers';
 import {
-  saveNews,
-  findNews,
   findNewsByTopic,
   findNewsByCompany,
   updateNewsSummary,
   getCompanyInfoAndTags,
   getListOfCompanyInfoAndTags,
+  saveMarketHistoricalData,
+  getAllCompanies,
 } from '../controllers';
+import { getMarketHistoricalData } from '../services';
 
 const router = express.Router();
 
@@ -33,15 +34,22 @@ router.post('/companyinfos', async (req, res) => {
   try {
     const companySymbols = req.body.companySymbols; // 从请求体中获取公司符号列表
     if (!Array.isArray(companySymbols)) {
-      res
-        .status(400)
-        .json({
-          error: 'Invalid input: companySymbols should be an array of strings.',
-        });
+      res.status(400).json({
+        error: 'Invalid input: companySymbols should be an array of strings.',
+      });
       return;
     }
     const companyInfoList = await getListOfCompanyInfoAndTags(companySymbols);
     res.status(200).json(companyInfoList);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/companies', async (req, res) => {
+  try {
+    const companies = await getAllCompanies();
+    res.json(companies);
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }
@@ -73,6 +81,16 @@ router.put('/news/:newsId', async (req, res) => {
     const aiSummary = req.body.ai_summary;
     const updatedNews = await updateNewsSummary(newsId, aiSummary);
     res.json(updatedNews);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/marketHistoricalData', async (req, res) => {
+  try {
+    const saveStatus = await saveMarketHistoricalData();
+    console.log('success');
+    res.json(saveStatus);
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }

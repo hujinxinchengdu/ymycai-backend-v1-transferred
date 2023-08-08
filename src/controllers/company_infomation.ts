@@ -1,5 +1,5 @@
 import { AppDataSource } from '../configuration';
-import { Company } from '../models';
+import { Company, News } from '../models';
 
 interface TagInfo {
   tag_id: string;
@@ -83,4 +83,13 @@ async function getListOfCompanyInfoAndTags(
   }
 }
 
-export { getCompanyInfoAndTags, getListOfCompanyInfoAndTags };
+async function getAllCompanies(): Promise<Company[]> {
+  try {
+    const Companies = await AppDataSource.manager.find(Company);
+    return Companies;
+  } catch (error) {
+    throw new Error(`Error while fetching new: ${error.message}`);
+  }
+}
+
+export { getCompanyInfoAndTags, getListOfCompanyInfoAndTags, getAllCompanies };
