@@ -64,3 +64,5 @@ typings/
 .env.cloud.dev
 .env.product
 .env.cloud_dev
+.env.local
+.env.admin_dev
