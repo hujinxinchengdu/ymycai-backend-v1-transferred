@@ -8,7 +8,7 @@ import {
   JoinTable,
 } from 'typeorm';
 
-import { NewsToCompanies, Topic } from '../models';
+import { NewsToCompanies, Topic } from '.';
 
 @Entity('news')
 class News {

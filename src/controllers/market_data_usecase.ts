@@ -1,6 +1,6 @@
 import { MarketData } from '../models';
 import { AppDataSource } from '../configuration';
-import { getAllCompanies } from './company_infomation';
+import { getAllCompanies } from './company_infomation_usecase';
 import { getMarketHistoricalData } from '../services';
 
 async function saveMarketHistoricalData(): Promise<void> {
