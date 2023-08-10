@@ -1,4 +1,4 @@
-export * from './CompanyModel';
+export * from './Company';
 export * from './TagModel';
 export * from './WatchlistModel';
 export * from './TradingNoteModel';

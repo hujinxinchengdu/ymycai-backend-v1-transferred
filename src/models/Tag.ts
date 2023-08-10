@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToMany, PrimaryColumn } from 'typeorm';
-import { Company } from './CompanyModel';
+import { Company } from './Company';
 
 @Entity('tags')
 class Tag {
