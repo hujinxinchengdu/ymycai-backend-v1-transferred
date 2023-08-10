@@ -6,12 +6,15 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Company } from '../models';
+import { Company } from '.';
 
-@Entity('longterm_signals')
-class LongtermSignal {
+@Entity('technical_indicators')
+class TechnicalIndicator {
   @PrimaryColumn({ type: 'varchar' })
-  signal_id: string;
+  technical_indicator_id: string;
+
+  @CreateDateColumn()
+  record_time: Date;
 
   @Column({ type: 'varchar' })
   company_id: string;
@@ -19,12 +22,9 @@ class LongtermSignal {
   @Column({ type: 'json' })
   data: any;
 
-  @CreateDateColumn()
-  date: Date;
-
-  @ManyToOne(() => Company, (company) => company.longterm_signals)
+  @ManyToOne(() => Company, (company) => company.technical_indicators)
   @JoinColumn({ name: 'company_id' })
   company: Company;
 }
 
-export { LongtermSignal };
+export { TechnicalIndicator };

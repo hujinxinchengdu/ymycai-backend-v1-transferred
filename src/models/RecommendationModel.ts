@@ -10,7 +10,7 @@ import {
   JoinTable,
 } from 'typeorm';
 
-import { Company } from '../models';
+import { Company } from '.';
 
 @Entity('recommendations')
 class Recommendation {
