@@ -1,0 +1,32 @@
+import { AppDataSource } from '../configuration';
+import { Company, News } from '../models';
+
+// async function getFinancialReportInfoBySymbol(
+//     companySymbol: string,
+//   ): Promise<> {
+//     try {
+//       const company = await AppDataSource.manager.findOne(Company, {
+//         where: { company_symbol: companySymbol },
+//         relations: ['tags'],
+//       });
+
+//       if (!company) {
+//         throw new Error(`Company with symbol ${companySymbol} not found`);
+//       }
+
+//       return {
+//         company_name: company.company_name,
+//         company_symbol: company.company_symbol,
+//         company_information: company.company_information,
+//         industry_position: company.industry_position,
+//         tags: company.tags.map((tag) => ({
+//           tag_id: tag.tag_id,
+//           tag_cn: tag.tag_cn,
+//           tag_en: tag.tag_en,
+//         })),
+//       };
+//     } catch (error) {
+//       throw new Error(`Error while fetching company: ${error.message}`);
+//     }
+//   }
+export {};
