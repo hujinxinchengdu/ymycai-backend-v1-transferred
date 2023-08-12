@@ -60,6 +60,7 @@ typings/
 # next.js build output
 .next
 
+
 .env.*
 .env.dev
 .env.cloud.dev
@@ -69,3 +70,4 @@ typings/
 .env.local_dev
 
 dist/**
+

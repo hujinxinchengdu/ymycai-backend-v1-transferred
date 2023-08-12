@@ -11,6 +11,11 @@ import {
   getAllCompanies,
   getAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
+  findAllNews,
+  saveMarketNewData,
+  getLatestMarketData,
+  getDayBeforeLatestMarketData,
+
 } from '../controllers';
 import { getMarketHistoricalData } from '../services';
 
@@ -88,6 +93,23 @@ router.put('/news/:newsId', async (req, res) => {
   }
 });
 
+router.get('/news', async (req, res) => {
+  try {
+    var currentPage = parseInt(req.query.currentPage as string, 10) || 1;
+    var pageSize = parseInt(req.query.pageSize as string, 10) || 5;
+    if (currentPage < 1) {
+      currentPage = 1;
+    }
+    if (pageSize < 1 || pageSize > 100) {
+      pageSize = 5;
+    }
+    const allNews = await findAllNews(currentPage, pageSize);
+    res.json(allNews);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 router.get('/marketHistoricalData', async (req, res) => {
   try {
     const saveStatus = await saveMarketHistoricalData();
@@ -134,6 +156,38 @@ router.put('/financial-reports/:companySymbol', async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/marketNewData', async (req, res) => {
+  try {
+    const saveStatus = await saveMarketNewData();
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/market-latest-data/:companyID', async (req, res) => {
+  try {
+    const companyID = req.params.companyID;
+    const saveStatus = await getLatestMarketData(companyID);
+    console.log('success：' + saveStatus);
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/market-day-before-latest-data/:companyID', async (req, res) => {
+  try {
+    const companyID = req.params.companyID;
+    const saveStatus = await getDayBeforeLatestMarketData(companyID);
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
   }
 });
 
