@@ -1,6 +1,12 @@
 import { News } from '../models';
 import { AppDataSource } from '../configuration';
 
+interface NewsInfo {
+  news: News[];
+  currentPage: string;
+  totalPages: string;
+}
+
 async function saveNews(newsData: Partial<News>): Promise<News> {
   const news = new News();
   news.title = newsData.title || 'Default Title';
@@ -55,6 +61,36 @@ async function findNewsByCompany(ticker: String): Promise<News[]> {
   }
 }
 
+async function findAllNews(
+  currentPage: number,
+  pageSize: number,
+): Promise<NewsInfo> {
+  try {
+    const totalNewsCount = await AppDataSource.manager.count(News);
+    const totalPages = Math.ceil(totalNewsCount / pageSize);
+
+    if (currentPage < 1) {
+      currentPage = 1;
+    } else if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+
+    const skipAmount = (currentPage - 1) * pageSize;
+    const savedNews = await AppDataSource.manager.find(News, {
+      skip: skipAmount,
+      take: pageSize,
+    });
+    const newsInfo: NewsInfo = {
+      news: savedNews,
+      currentPage: currentPage.toString(),
+      totalPages: totalPages.toString(),
+    };
+    return newsInfo;
+  } catch (error) {
+    throw new Error(`Error while fetching news: ${error.message}`);
+  }
+}
+
 async function updateNewsSummary(
   news_id: string,
   aiSummary: string,
@@ -79,5 +115,6 @@ export {
   saveNews,
   findNewsByTopic,
   findNewsByCompany,
+  findAllNews,
   updateNewsSummary,
 };
