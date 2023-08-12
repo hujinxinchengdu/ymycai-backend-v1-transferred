@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getFormattedDate } from '../utils';
 import { MarketData } from '../models';
 import { getLastMarketData } from '../controllers';
+import { v4 as uuidv4 } from 'uuid';
 
 const API_KEY = process.env.FINANCIAL_MODELING_KEY;
 // 定义获取市场数据的函数
