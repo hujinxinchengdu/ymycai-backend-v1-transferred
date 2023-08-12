@@ -1,4 +1,3 @@
-import { MarketData } from '../models';
 import { AppDataSource } from '../configuration';
 
 import { getMarketHistoricalData, getMarketNewData } from '../services';
