@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   ManyToOne,
 } from 'typeorm';
-import { User } from '../models';
+import { User } from '.';
 
 @Entity('trading_notes')
 class TradingNote {

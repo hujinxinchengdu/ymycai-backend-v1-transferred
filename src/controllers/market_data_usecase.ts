@@ -1,8 +1,8 @@
 import { MarketData } from '../models';
 import { AppDataSource } from '../configuration';
-import { getAllCompanies } from './company_infomation';
+
 import { getMarketHistoricalData, getMarketNewData } from '../services';
-import { Between, Equal } from 'typeorm';
+import { getAllCompanies } from './company_infomation_usecase';
 
 async function saveMarketHistoricalData(): Promise<void> {
   try {

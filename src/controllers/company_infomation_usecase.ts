@@ -1,27 +1,27 @@
 import { AppDataSource } from '../configuration';
 import { Company, News } from '../models';
 
-interface TagInfo {
+interface TagInfoModel {
   tag_id: string;
   tag_cn: string;
   tag_en: string;
 }
 
-interface CompanyInfo {
+interface CompanyInfoModel {
   company_name: string;
   company_symbol: string;
   company_information: string;
   industry_position: string;
-  tags: TagInfo[];
+  tags: TagInfoModel[];
 }
 
-interface CompanyInfoList {
-  companies: CompanyInfo[];
+interface CompanyInfoListModel {
+  companies: CompanyInfoModel[];
 }
 
 async function getCompanyInfoAndTags(
   companySymbol: string,
-): Promise<CompanyInfo> {
+): Promise<CompanyInfoModel> {
   try {
     const company = await AppDataSource.manager.findOne(Company, {
       where: { company_symbol: companySymbol },
@@ -50,7 +50,7 @@ async function getCompanyInfoAndTags(
 
 async function getListOfCompanyInfoAndTags(
   companyList: string[],
-): Promise<CompanyInfoList> {
+): Promise<CompanyInfoListModel> {
   try {
     const companiesInfo = await Promise.all(
       companyList.map(async (companySymbol) => {

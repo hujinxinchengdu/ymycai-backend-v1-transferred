@@ -18,7 +18,7 @@ import {
   LongtermSignal,
   NewsToCompanies,
   Recommendation,
-} from '../models';
+} from '.';
 
 @Entity('companies')
 class Company {

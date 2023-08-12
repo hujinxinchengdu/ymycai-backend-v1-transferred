@@ -1,5 +1,13 @@
 # Stockaid Backend
 
+创建docker容器, 并且运行docker容器,并设置文件关联方法
+端口: 主机端口:docker端口
+分别执行下面的两个命令.
+```
+docker build .
+docker run -p 8000:8000 --name APP_NAME -v MY_PATH:/app  <image-id>
+```
+
 # API Example
 
 API文档例子

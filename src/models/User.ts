@@ -5,7 +5,7 @@ import {
   PrimaryColumn,
   OneToMany,
 } from 'typeorm';
-import { TradingNote, Watchlist } from '../models';
+import { TradingNote, Watchlist } from '.';
 
 @Entity('users')
 class User {
