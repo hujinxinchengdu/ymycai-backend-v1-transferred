@@ -60,7 +60,7 @@ typings/
 # next.js build output
 .next
 
-.env.dev
-.env.cloud.dev
-.env.product
 .env.cloud_dev
+.env.admin_dev
+.env.local_dev
+.env.local_product
