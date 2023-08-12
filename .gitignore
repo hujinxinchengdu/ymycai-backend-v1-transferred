@@ -67,3 +67,5 @@ typings/
 .env.cloud_dev
 .env.admin_dev
 .env.local_dev
+
+dist/**

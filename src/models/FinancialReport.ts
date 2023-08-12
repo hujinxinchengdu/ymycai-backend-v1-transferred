@@ -6,6 +6,9 @@ class FinancialReport {
   @PrimaryColumn({ type: 'varchar' })
   fin_report_id: string;
 
+  @Column({ type: 'varchar' })
+  type: string;
+
   @Column({ type: 'timestamp' })
   publish_time: Date;
 
@@ -17,9 +20,6 @@ class FinancialReport {
 
   @Column({ type: 'json' })
   income_statement: any;
-
-  @Column({ type: 'json' })
-  forecast_list: any;
 
   @Column({ type: 'varchar' })
   company_id: string;

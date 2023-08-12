@@ -1,32 +1,104 @@
 import { AppDataSource } from '../configuration';
-import { Company, News } from '../models';
+import { getFinancialReportData } from '../services';
+import { Company, FinancialReport } from '../models';
 
-// async function getFinancialReportInfoBySymbol(
-//     companySymbol: string,
-//   ): Promise<> {
-//     try {
-//       const company = await AppDataSource.manager.findOne(Company, {
-//         where: { company_symbol: companySymbol },
-//         relations: ['tags'],
-//       });
+async function getAllFinancialReportInfoBySymbol(
+  companySymbol: string,
+  isQuarterly: boolean,
+): Promise<void> {
+  if (typeof isQuarterly !== 'boolean') {
+    throw new Error('The isQuarterly parameter must be a boolean.');
+  }
 
-//       if (!company) {
-//         throw new Error(`Company with symbol ${companySymbol} not found`);
-//       }
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
 
-//       return {
-//         company_name: company.company_name,
-//         company_symbol: company.company_symbol,
-//         company_information: company.company_information,
-//         industry_position: company.industry_position,
-//         tags: company.tags.map((tag) => ({
-//           tag_id: tag.tag_id,
-//           tag_cn: tag.tag_cn,
-//           tag_en: tag.tag_en,
-//         })),
-//       };
-//     } catch (error) {
-//       throw new Error(`Error while fetching company: ${error.message}`);
-//     }
-//   }
-export {};
+    if (!company) {
+      throw new Error(`Company with symbol ${companySymbol} not found`);
+    }
+
+    const financialReports = await getFinancialReportData(
+      companySymbol,
+      isQuarterly,
+      company.company_id,
+    );
+
+    for (const report of financialReports) {
+      const existingReport = await AppDataSource.manager.findOne(
+        FinancialReport,
+        {
+          where: {
+            publish_time: report.publish_time,
+            company_id: report.company_id,
+          },
+        },
+      );
+
+      console.log('start saving');
+
+      if (!existingReport) {
+        await AppDataSource.manager.save(report);
+      }
+    }
+    console.log('finish');
+  } catch (error) {
+    throw new Error(`Error while fetching company: ${error.message}`);
+  }
+}
+
+async function updateFinancialReportInfoBySymbol(
+  companySymbol: string,
+  isQuarterly: boolean,
+): Promise<void> {
+  if (typeof isQuarterly !== 'boolean') {
+    throw new Error('The isQuarterly parameter must be a boolean.');
+  }
+
+  const reportType = isQuarterly ? 'Quarterly' : 'Annual';
+
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+
+    if (!company) {
+      throw new Error(`Company with symbol ${companySymbol} not found`);
+    }
+
+    // Get the latest report date from the database for this company and specific report type (Quarterly or Annual).
+    const latestReportInDb = await AppDataSource.manager.findOne(
+      FinancialReport,
+      {
+        where: { company_id: company.company_id, type: reportType },
+        order: { publish_time: 'DESC' },
+      },
+    );
+
+    const latestDateInDb = latestReportInDb
+      ? latestReportInDb.publish_time
+      : new Date(0); // If no report found, set to a very early date.
+
+    const financialReports = await getFinancialReportData(
+      companySymbol,
+      isQuarterly,
+      company.company_id,
+    );
+
+    for (const report of financialReports) {
+      if (report.publish_time > latestDateInDb) {
+        await AppDataSource.manager.save(report);
+      } else {
+        // Since reports are in order, we can break once we hit a report date that's
+        // not greater than the latest in DB.
+        break;
+      }
+    }
+    console.log('finish');
+  } catch (error) {
+    throw new Error(`Error while updating financial reports: ${error.message}`);
+  }
+}
+
+export { getAllFinancialReportInfoBySymbol, updateFinancialReportInfoBySymbol };
