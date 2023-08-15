@@ -8,6 +8,7 @@ import router from './router/routes';
 import companyRoutes from './router/companyRoutes';
 import newsRoutes from './router/marketDataRoutes';
 import marketDataRoutes from './router/newsRoutes';
+import financialReportRoutes from './router/financialReportRoutes';
 import { Request, Response, NextFunction } from 'express';
 
 require('express-async-errors');
@@ -66,6 +67,7 @@ app.use('/', router);
 app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/marketdata', marketDataRoutes);
+app.use('/api/financial-reports', financialReportRoutes);
 
 // Global error handler
 app.use(
