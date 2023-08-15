@@ -1,5 +1,5 @@
 import { AppDataSource } from '../configuration';
-
+import { MarketData } from '../models';
 import { getMarketHistoricalData, getMarketNewData } from '../services';
 import { getAllCompanies } from './company_infomation_usecase';
 

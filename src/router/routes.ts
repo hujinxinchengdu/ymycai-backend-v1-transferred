@@ -9,13 +9,13 @@ import {
   getListOfCompanyInfoAndTags,
   saveMarketHistoricalData,
   getAllCompanies,
-  getAllFinancialReportInfoBySymbol,
+  saveAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
   findAllNews,
   saveMarketNewData,
   getLatestMarketData,
   getDayBeforeLatestMarketData,
-
+  getCompanyAllFinancialReport,
 } from '../controllers';
 import { getMarketHistoricalData } from '../services';
 
@@ -131,7 +131,7 @@ router.post('/financial-reports/:companySymbol', async (req, res) => {
         .json({ error: 'isQuarterly must be a boolean value.' });
     }
 
-    await getAllFinancialReportInfoBySymbol(companySymbol, isQuarterly);
+    await saveAllFinancialReportInfoBySymbol(companySymbol, isQuarterly);
     return res.status(200).json({
       message: `Successfully fetched financial reports for ${companySymbol}`,
     });
@@ -154,6 +154,34 @@ router.put('/financial-reports/:companySymbol', async (req, res) => {
     return res.status(200).json({
       message: `Successfully updated financial reports for ${companySymbol}`,
     });
+  } catch (error) {
+    return res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/financial-reports/:companySymbol', async (req, res) => {
+  try {
+    const companySymbol = req.params.companySymbol;
+    const isQuarterly = req.query.isQuarterly === 'true'; // Convert query param to boolean
+    const from = req.query.from
+      ? new Date(req.query.from as string)
+      : undefined;
+    const to = req.query.to ? new Date(req.query.to as string) : undefined;
+
+    if (typeof isQuarterly !== 'boolean') {
+      return res
+        .status(400)
+        .json({ error: 'isQuarterly must be a boolean value.' });
+    }
+
+    const financialReports = await getCompanyAllFinancialReport(
+      companySymbol,
+      isQuarterly,
+      from,
+      to,
+    );
+
+    return res.status(200).json(financialReports);
   } catch (error) {
     return res.status(500).json({ error: error.toString() });
   }

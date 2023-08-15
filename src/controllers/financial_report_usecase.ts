@@ -1,8 +1,9 @@
 import { AppDataSource } from '../configuration';
 import { getFinancialReportData } from '../services';
 import { Company, FinancialReport } from '../models';
+import { Between, MoreThan, LessThan } from 'typeorm';
 
-async function getAllFinancialReportInfoBySymbol(
+async function saveAllFinancialReportInfoBySymbol(
   companySymbol: string,
   isQuarterly: boolean,
 ): Promise<void> {
@@ -101,4 +102,61 @@ async function updateFinancialReportInfoBySymbol(
   }
 }
 
-export { getAllFinancialReportInfoBySymbol, updateFinancialReportInfoBySymbol };
+async function getCompanyAllFinancialReport(
+  companySymbol: string,
+  isQuarterly?: boolean,
+  from?: Date,
+  to?: Date,
+): Promise<any> {
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+
+    if (!company) {
+      throw new Error(`Company with symbol ${companySymbol} not found`);
+    }
+
+    let whereClause: any = { company_id: company.company_id };
+
+    if (isQuarterly !== null) {
+      const reportType = isQuarterly ? 'Quarterly' : 'Annual';
+      whereClause = {
+        ...whereClause,
+        type: reportType,
+      };
+    }
+
+    if (from && to) {
+      whereClause = {
+        ...whereClause,
+        publish_time: Between(from, to),
+      };
+    } else if (from) {
+      whereClause = {
+        ...whereClause,
+        publish_time: MoreThan(from),
+      };
+    } else if (to) {
+      whereClause = {
+        ...whereClause,
+        publish_time: LessThan(to),
+      };
+    }
+
+    const financialReports = await AppDataSource.manager.find(FinancialReport, {
+      where: whereClause,
+      order: { publish_time: 'ASC' },
+    });
+
+    return financialReports;
+  } catch (error) {
+    throw new Error(`Error fetching financial reports: ${error.message}`);
+  }
+}
+
+export {
+  saveAllFinancialReportInfoBySymbol,
+  updateFinancialReportInfoBySymbol,
+  getCompanyAllFinancialReport,
+};
