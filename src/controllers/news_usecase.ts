@@ -37,13 +37,33 @@ async function findNewsByTopic(topicName: String): Promise<News[]> {
   try {
     const relatedNews = await AppDataSource.manager
       .createQueryBuilder(News, 'news')
+      .leftJoinAndSelect('news.topics', 'topic') // 连接并获取相关的topic
       .innerJoin('topics_to_news', 'tn', 'tn.news_id = news.news_id')
       .innerJoin('topics', 't', 'tn.topic_id = t.topic_id')
       .where('t.name = :topicName', { topicName })
       .getMany();
+
     return relatedNews;
   } catch (error) {
-    throw new Error(`Error while fetching new: ${error.message}`);
+    throw new Error(`Error while fetching news: ${error.message}`);
+  }
+}
+
+async function findNewsById(newsId: string): Promise<News> {
+  try {
+    const newsItem = await AppDataSource.manager
+      .createQueryBuilder(News, 'news')
+      .leftJoinAndSelect('news.topics', 'topic') // 连接并获取相关的topic
+      .where('news.news_id = :newsId', { newsId })
+      .getOne(); // 获取单一新闻实例
+
+    if (!newsItem) {
+      throw new Error('News not found.');
+    }
+
+    return newsItem;
+  } catch (error) {
+    throw new Error(`Error while fetching news: ${error.message}`);
   }
 }
 
