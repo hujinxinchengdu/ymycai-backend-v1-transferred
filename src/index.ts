@@ -6,8 +6,8 @@ import { AppDataSource } from './configuration';
 //router
 import router from './router/routes';
 import companyRoutes from './router/companyRoutes';
-import newsRoutes from './router/marketDataRoutes';
-import marketDataRoutes from './router/newsRoutes';
+import newsRoutes from './router/newsRoutes';
+import marketDataRoutes from './router/marketDataRoutes';
 import financialReportRoutes from './router/financialReportRoutes';
 import { Request, Response, NextFunction } from 'express';
 

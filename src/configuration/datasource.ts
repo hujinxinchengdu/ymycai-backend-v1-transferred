@@ -17,6 +17,7 @@ import {
   Topic,
   Recommendation,
   NewsToCompanies,
+  EarningsCalendar,
 } from '../models';
 
 import * as fs from 'fs';
@@ -62,6 +63,7 @@ export const AppDataSource = new DataSource({
     Topic,
     Recommendation,
     NewsToCompanies,
+    EarningsCalendar,
   ],
 
   synchronize: false,

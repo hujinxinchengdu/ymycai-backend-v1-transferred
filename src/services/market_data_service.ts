@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getFormattedDate } from '../utils';
 import { MarketData } from '../models';
-import { getLastMarketData } from '../controllers';
+import { getLastMarketDataForServices } from '../controllers';
 import { v4 as uuidv4 } from 'uuid';
 
 const API_KEY = process.env.FINANCIAL_MODELING_KEY;
@@ -54,7 +54,7 @@ export async function getMarketNewData(
   companySymbol: string,
 ): Promise<MarketData[]> {
   try {
-    const lastMarketData = await getLastMarketData(companyId);
+    const lastMarketData = await getLastMarketDataForServices(companyId);
     const lastDateTimestamp = lastMarketData
       ? lastMarketData.record_time
       : null;

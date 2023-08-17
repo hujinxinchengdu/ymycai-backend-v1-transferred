@@ -47,6 +47,9 @@ class MarketData {
   @Column({ type: 'varchar' })
   type: string;
 
+  // @Column({ type: 'varchar' })
+  // symbol: string;
+
   @UpdateDateColumn()
   last_refreshed: Date;
 

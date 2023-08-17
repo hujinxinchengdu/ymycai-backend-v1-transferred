@@ -2,6 +2,7 @@ import { AppDataSource } from '../configuration';
 import { MarketData } from '../models';
 import { getMarketHistoricalData, getMarketNewData } from '../services';
 import { getAllCompanies } from './company_infomation_usecase';
+import { getCompanyIdFromSymbol } from './util/get_companyid_by_symbol';
 
 async function saveMarketHistoricalData(): Promise<void> {
   try {
@@ -48,7 +49,7 @@ async function saveMarketNewData(): Promise<void> {
   }
 }
 
-async function getLastMarketData(
+async function getLastMarketDataForServices(
   companyId: string,
 ): Promise<MarketData | null> {
   try {
@@ -64,14 +65,18 @@ async function getLastMarketData(
 }
 
 async function getLatestMarketData(
-  companyId: string,
+  companySymbol: string,
 ): Promise<MarketData | null> {
   try {
-    return await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'market_data')
-      .where('market_data.company_id = :companyId', { companyId })
-      .orderBy('market_data.record_time', 'DESC')
-      .getOne();
+    const companyId = await getCompanyIdFromSymbol(companySymbol);
+    if (companyId) {
+      return await AppDataSource.manager
+        .createQueryBuilder(MarketData, 'market_data')
+        .where('market_data.company_id = :companyId', { companyId })
+        .orderBy('market_data.record_time', 'DESC')
+        .getOne();
+    }
+    return null;
   } catch (error) {
     console.error('Error fetching last market data:', error.message);
     throw error;
@@ -79,9 +84,12 @@ async function getLatestMarketData(
 }
 
 async function getDayBeforeLatestMarketData(
-  companyId: string,
+  companySymbol: string,
 ): Promise<MarketData | null> {
   try {
+    const companyId = await getCompanyIdFromSymbol(companySymbol);
+    if (!companyId) return null;
+
     const latestMarketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'market_data')
       .where('market_data.company_id = :companyId', { companyId })
@@ -103,9 +111,8 @@ async function getDayBeforeLatestMarketData(
         },
       );
       return dayBeforeLatestData as unknown as MarketData;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error('Error fetching last market data:', error.message);
     throw error;
@@ -114,7 +121,7 @@ async function getDayBeforeLatestMarketData(
 
 export {
   saveMarketHistoricalData,
-  getLastMarketData,
+  getLastMarketDataForServices,
   saveMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
