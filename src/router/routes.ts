@@ -62,25 +62,15 @@ router.get('/companies', async (req, res) => {
   }
 });
 
-router.get('/news/topic/:topic', async (req, res) => {
-  try {
-    const topicName = req.params.topic;
-    const news = await findNewsByTopic(topicName);
-    return res.status(200).json(news);
-  } catch (error) {
-    return res.status(500).json({ error: error.toString() });
-  }
-});
-
-router.get('/news/company/:company', async (req, res) => {
-  try {
-    const companyLabel = req.params.company;
-    const news = await findNewsByCompany(companyLabel);
-    return res.status(200).json(news);
-  } catch (error) {
-    return res.status(500).json({ error: error.toString() });
-  }
-});
+// router.get('/news/topic/:topic', async (req, res) => {
+//   try {
+//     const topicName = req.params.topic;
+//     const news = await findNewsByTopic(topicName);
+//     return res.status(200).json(news);
+//   } catch (error) {
+//     return res.status(500).json({ error: error.toString() });
+//   }
+// });
 
 router.put('/news/:newsId', async (req, res) => {
   try {
@@ -95,18 +85,14 @@ router.put('/news/:newsId', async (req, res) => {
 
 router.get('/news', async (req, res) => {
   try {
-    var currentPage = parseInt(req.query.currentPage as string, 10) || 1;
-    var pageSize = parseInt(req.query.pageSize as string, 10) || 5;
-    if (currentPage < 1) {
-      currentPage = 1;
-    }
-    if (pageSize < 1 || pageSize > 100) {
-      pageSize = 5;
-    }
-    const allNews = await findAllNews(currentPage, pageSize);
-    res.json(allNews);
+    // 获取查询参数以便进行分页
+    const page = parseInt((req.query.page as string) || '1');
+    const pageSize = parseInt((req.query.pageSize as string) || '10');
+    const news = await findAllNews(page, pageSize);
+
+    return res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({ error: error.toString() });
+    return res.status(500).json({ error: error.toString() });
   }
 });
 

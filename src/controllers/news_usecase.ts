@@ -33,14 +33,22 @@ async function findNews(): Promise<News[]> {
   }
 }
 
-async function findNewsByTopic(topicName: String): Promise<News[]> {
+async function findNewsByTopic(
+  topicName: String,
+  page: number,
+  pageSize: number,
+): Promise<News[]> {
   try {
+    const skip = (page - 1) * pageSize; // 计算需要跳过的记录数
+
     const relatedNews = await AppDataSource.manager
       .createQueryBuilder(News, 'news')
       .leftJoinAndSelect('news.topics', 'topic') // 连接并获取相关的topic
       .innerJoin('topics_to_news', 'tn', 'tn.news_id = news.news_id')
       .innerJoin('topics', 't', 'tn.topic_id = t.topic_id')
       .where('t.name = :topicName', { topicName })
+      .skip(skip) // 使用.skip()方法跳过记录
+      .take(pageSize) // 使用.take()方法限制返回的记录数
       .getMany();
 
     return relatedNews;
@@ -67,45 +75,46 @@ async function findNewsById(newsId: string): Promise<News> {
   }
 }
 
-async function findNewsByCompany(ticker: String): Promise<News[]> {
+async function findNewsByCompany(
+  ticker: String,
+  page: number,
+  pageSize: number,
+): Promise<News[]> {
   try {
+    const skip = (page - 1) * pageSize; // 计算需要跳过的记录数
+
     const relatedNews = await AppDataSource.manager
       .createQueryBuilder(News, 'news')
+      .leftJoinAndSelect('news.topics', 'topic') // 连接并获取相关的topic
       .innerJoin('news_to_companies', 'cn', 'cn.news_id = news.news_id')
       .innerJoin('companies', 'c', 'cn.company_id = c.company_id')
       .where('c.company_symbol = :ticker', { ticker })
+      .skip(skip) // 使用.skip()方法跳过记录
+      .take(pageSize) // 使用.take()方法限制返回的记录数
       .getMany();
+
     return relatedNews;
   } catch (error) {
-    throw new Error(`Error while fetching new: ${error.message}`);
+    throw new Error(`Error while fetching news: ${error.message}`);
   }
 }
 
 async function findAllNews(
-  currentPage: number,
-  pageSize: number,
-): Promise<NewsInfo> {
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<News[]> {
   try {
-    const totalNewsCount = await AppDataSource.manager.count(News);
-    const totalPages = Math.ceil(totalNewsCount / pageSize);
+    const skip = (page - 1) * pageSize; // 计算需要跳过的记录数
 
-    if (currentPage < 1) {
-      currentPage = 1;
-    } else if (currentPage > totalPages) {
-      currentPage = totalPages;
-    }
+    const allNews = await AppDataSource.manager
+      .createQueryBuilder(News, 'news')
+      .leftJoinAndSelect('news.topics', 'topic') // 连接并获取相关的topic
+      .orderBy('news.published_time', 'DESC') // 按发布时间降序排序
+      .skip(skip) // 使用.skip()方法跳过记录
+      .take(pageSize) // 使用.take()方法限制返回的记录数
+      .getMany();
 
-    const skipAmount = (currentPage - 1) * pageSize;
-    const savedNews = await AppDataSource.manager.find(News, {
-      skip: skipAmount,
-      take: pageSize,
-    });
-    const newsInfo: NewsInfo = {
-      news: savedNews,
-      currentPage: currentPage.toString(),
-      totalPages: totalPages.toString(),
-    };
-    return newsInfo;
+    return allNews;
   } catch (error) {
     throw new Error(`Error while fetching news: ${error.message}`);
   }
