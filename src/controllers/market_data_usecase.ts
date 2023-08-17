@@ -119,10 +119,31 @@ async function getDayBeforeLatestMarketData(
   }
 }
 
+async function getMarketDataByCompanySymbol(
+  symbol: string,
+): Promise<MarketData[]> {
+  try {
+    const companyId = await getCompanyIdFromSymbol(symbol); // 获取company_id
+
+    // 2. 查询不重复的record_time数据
+    const marketData = await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'md')
+      .distinctOn(['md.record_time'])
+      .where('md.company_id = :companyId', { companyId })
+      .orderBy('md.record_time', 'DESC')
+      .getMany();
+
+    return marketData;
+  } catch (error) {
+    throw new Error(`Error while fetching market data: ${error.message}`);
+  }
+}
+
 export {
   saveMarketHistoricalData,
   getLastMarketDataForServices,
   saveMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
+  getMarketDataByCompanySymbol,
 };
