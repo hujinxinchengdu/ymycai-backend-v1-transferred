@@ -146,7 +146,7 @@ async function getCompanyAllFinancialReport(
 
     const financialReports = await AppDataSource.manager.find(FinancialReport, {
       where: whereClause,
-      order: { publish_time: 'ASC' },
+      order: { publish_time: 'DESC' },
     });
 
     return financialReports;
