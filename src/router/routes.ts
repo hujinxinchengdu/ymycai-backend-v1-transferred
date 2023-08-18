@@ -15,6 +15,7 @@ import {
   getDayBeforeLatestMarketData,
 } from '../controllers';
 import { getMarketHistoricalData } from '../services';
+import { ScheduleDailyCall } from '../utils/ScheduleCall';
 
 const router = express.Router();
 
@@ -119,7 +120,8 @@ router.get('/marketHistoricalData', async (req, res) => {
 
 router.get('/marketNewData', async (req, res) => {
   try {
-    const saveStatus = await saveMarketNewData();
+    //const saveStatus = await saveMarketNewData();
+    const saveStatus = await ScheduleDailyCall();
     console.log('success');
     res.json(saveStatus);
   } catch (error) {
