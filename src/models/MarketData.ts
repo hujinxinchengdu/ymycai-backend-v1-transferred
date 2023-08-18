@@ -47,8 +47,23 @@ class MarketData {
   @Column({ type: 'varchar' })
   type: string;
 
-  // @Column({ type: 'varchar' })
-  // symbol: string;
+  @Column({ type: 'bigint' })
+  unadjustedVolume: number;
+
+  @Column({ type: 'double precision' })
+  change: number;
+
+  @Column({ type: 'double precision' })
+  changePercent: number;
+
+  @Column({ type: 'double precision' })
+  vwap: number;
+
+  @Column({ type: 'varchar' })
+  label: string;
+
+  @Column({ type: 'double precision' })
+  changeOverTime: number;
 
   @UpdateDateColumn()
   last_refreshed: Date;
