@@ -8,6 +8,20 @@ import {
 } from 'typeorm';
 import { Company } from '.';
 
+/**
+    Symbol — company’s symbol.
+    TransactionDate — the date when a transaction was made.
+    ReportingCik — the CIK of the report that was filled by an insider.
+    TransactionType — Sale, Purchase, Gift, and other types.
+    SecuritiesOwned — how many securities are owned by the insider.
+    CompanyCik — company’s CIK.
+    ReportingName — the name of the insider who made the transaction.
+    AcquisitionOrDisproportion — increasing or reducing the number of insider’s securities.
+    FormType — 3, 4 or 5 SEC Form was filled to define this transaction.
+    SecuritiesTransacted — how many securities were transacted.
+    Security Name — the name of securities that was transacted, ex. "Common Stock".
+    Link — the link to the original report in SEC archives.
+ */
 @Entity('insider_trading_transactions')
 class InsiderTradingTransaction {
   @PrimaryColumn({ type: 'varchar' })
