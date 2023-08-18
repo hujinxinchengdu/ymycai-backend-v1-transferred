@@ -2,19 +2,16 @@ import express from 'express';
 
 // import { savePhoto, findPhoto } from '../controllers';
 import {
-  findNewsByTopic,
-  findNewsByCompany,
   updateNewsSummary,
   getCompanyInfoAndTags,
   getListOfCompanyInfoAndTags,
-  // saveMarketHistoricalData,
   getAllCompanies,
   saveAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
   findAllNews,
-  // saveMarketNewData,
-  // getLatestMarketData,
-  // getDayBeforeLatestMarketData,
+  saveMarketNewData,
+  getLatestMarketData,
+  getDayBeforeLatestMarketData,
   getCompanyAllFinancialReport,
 } from '../controllers';
 // import { getMarketHistoricalData } from '../services';
@@ -96,16 +93,6 @@ router.get('/news', async (req, res) => {
   }
 });
 
-// router.get('/marketHistoricalData', async (req, res) => {
-//   try {
-//     const saveStatus = await saveMarketHistoricalData();
-//     console.log('success');
-//     return res.json(saveStatus);
-//   } catch (error) {
-//     return res.status(500).json({ error: error.toString() });
-//   }
-// });
-
 router.post('/financial-reports/:companySymbol', async (req, res) => {
   try {
     const companySymbol = req.params.companySymbol;
@@ -173,36 +160,36 @@ router.get('/financial-reports/:companySymbol', async (req, res) => {
   }
 });
 
-// router.get('/marketNewData', async (req, res) => {
-//   try {
-//     const saveStatus = await saveMarketNewData();
-//     console.log('success');
-//     res.json(saveStatus);
-//   } catch (error) {
-//     res.status(500).json({ error: error.toString() });
-//   }
-// });
+router.get('/marketNewData', async (req, res) => {
+  try {
+    const saveStatus = await saveMarketNewData();
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
 
-// router.get('/market-latest-data/:companyID', async (req, res) => {
-//   try {
-//     const companyID = req.params.companyID;
-//     const saveStatus = await getLatestMarketData(companyID);
-//     console.log('success：' + saveStatus);
-//     res.json(saveStatus);
-//   } catch (error) {
-//     res.status(500).json({ error: error.toString() });
-//   }
-// });
+router.get('/market-latest-data/:companyID', async (req, res) => {
+  try {
+    const companyID = req.params.companyID;
+    const saveStatus = await getLatestMarketData(companyID);
+    console.log('success：' + saveStatus);
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
 
-// router.get('/market-day-before-latest-data/:companyID', async (req, res) => {
-//   try {
-//     const companyID = req.params.companyID;
-//     const saveStatus = await getDayBeforeLatestMarketData(companyID);
-//     console.log('success');
-//     res.json(saveStatus);
-//   } catch (error) {
-//     res.status(500).json({ error: error.toString() });
-//   }
-// });
+router.get('/market-day-before-latest-data/:companyID', async (req, res) => {
+  try {
+    const companyID = req.params.companyID;
+    const saveStatus = await getDayBeforeLatestMarketData(companyID);
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
 
 export default router;

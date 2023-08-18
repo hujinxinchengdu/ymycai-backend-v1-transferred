@@ -1,38 +1,9 @@
+import { In } from 'typeorm';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
-import {
-  getCompanyQuoteData,
-  getMarketHistoricalData,
-  getMarketNewData,
-} from '../services';
+import { getCompanyQuoteData, getMarketNewData } from '../services';
 import { getAllCompanies } from './company_infomation_usecase';
 import { getCompanyIdFromSymbol } from './util/get_companyid_by_symbol';
-
-async function saveMarketHistoricalData(): Promise<void> {
-  try {
-    const companies = await getAllCompanies();
-    for (const company of companies) {
-      const existingData = await AppDataSource.manager.findOne(MarketData, {
-        where: { company_id: company.company_id },
-      });
-      if (!existingData) {
-        const companySymbol = company.company_symbol;
-        const companyMarketData = await getMarketHistoricalData(
-          company.company_id,
-          companySymbol,
-        );
-        for (const marketData of companyMarketData) {
-          await AppDataSource.manager.save(marketData);
-        }
-      } else {
-        console.log(company.company_symbol + ' already exists in database');
-      }
-    }
-    return;
-  } catch (error) {
-    throw error;
-  }
-}
 
 async function saveMarketNewData(): Promise<void> {
   try {
@@ -175,7 +146,7 @@ async function saveCompanyQuoteDataByCompanySymbolList(
       // 使用 TypeORM 的 save 方法保存或更新市场数据。
       // 如果市场数据已经存在，则根据主键进行更新。
       // 否则，将插入新记录。
-      await AppDataSource.manager.save(companyQuoteData);
+      await AppDataSource.manager.save(CompanyQuote, companyQuoteData);
     }
 
     console.log('Company Quote data save operation finished');
@@ -186,12 +157,28 @@ async function saveCompanyQuoteDataByCompanySymbolList(
   }
 }
 
+async function getCompanyQuoteDataByCompanySymbolList(
+  symbols: string[],
+): Promise<CompanyQuote[]> {
+  try {
+    // Fetch the CompanyQuote records based on the provided symbols.
+    const companyQuotes = await AppDataSource.manager.find(CompanyQuote, {
+      where: { symbol: In(symbols) }, // Use TypeORM's "In" function to match any symbol in the list
+      order: { record_time: 'DESC' }, // Order by descending record_time as in your example
+    });
+
+    return companyQuotes;
+  } catch (error) {
+    throw new Error(`Error while fetching company quotes: ${error.message}`);
+  }
+}
+
 export {
-  saveMarketHistoricalData,
   getLastMarketDataForServices,
   saveMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
   getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
+  getCompanyQuoteDataByCompanySymbolList,
 };
