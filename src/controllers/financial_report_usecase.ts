@@ -68,7 +68,6 @@ async function updateFinancialReportInfoBySymbol(
       throw new Error(`Company with symbol ${companySymbol} not found`);
     }
 
-    // Get the latest report date from the database for this company and specific report type (Quarterly or Annual).
     const latestReportInDb = await AppDataSource.manager.findOne(
       FinancialReport,
       {
@@ -79,7 +78,7 @@ async function updateFinancialReportInfoBySymbol(
 
     const latestDateInDb = latestReportInDb
       ? latestReportInDb.publish_time
-      : new Date(0); // If no report found, set to a very early date.
+      : new Date(0);
 
     const financialReports = await getFinancialReportData(
       companySymbol,
@@ -87,15 +86,24 @@ async function updateFinancialReportInfoBySymbol(
       company.company_id,
     );
 
+    const reportsToSave: FinancialReport[] = [];
+
     for (const report of financialReports) {
       if (report.publish_time > latestDateInDb) {
-        await AppDataSource.manager.save(report);
+        reportsToSave.push(report);
       } else {
-        // Since reports are in order, we can break once we hit a report date that's
-        // not greater than the latest in DB.
         break;
       }
     }
+
+    // Batch save the reports
+    const BATCH_SIZE = 500; // You can adjust this value as needed.
+
+    for (let i = 0; i < reportsToSave.length; i += BATCH_SIZE) {
+      const batch = reportsToSave.slice(i, i + BATCH_SIZE);
+      await AppDataSource.manager.save(FinancialReport, batch);
+    }
+
     console.log('finish');
   } catch (error) {
     throw new Error(`Error while updating financial reports: ${error.message}`);
