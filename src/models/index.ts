@@ -13,3 +13,5 @@ export * from './News';
 export * from './Recommendation';
 export * from './NewsToCompanies';
 export * from './Topic';
+export * from './EarningsCalendar';
+export * from './CompanyQuote';

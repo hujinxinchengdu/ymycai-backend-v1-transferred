@@ -69,3 +69,5 @@ typings/
 .env.admin_dev
 .env.local_dev
 
+dist/**
+

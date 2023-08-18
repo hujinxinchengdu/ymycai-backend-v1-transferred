@@ -18,6 +18,8 @@ import {
   LongtermSignal,
   NewsToCompanies,
   Recommendation,
+  EarningsCalendar,
+  CompanyQuote,
 } from '.';
 
 @Entity('companies')
@@ -48,6 +50,9 @@ class Company {
 
   @UpdateDateColumn()
   info_update_time: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  earnings_announcement: Date;
 
   @ManyToMany(() => Tag, (tag) => tag.companies)
   @JoinTable({
@@ -83,6 +88,15 @@ class Company {
 
   @OneToMany(() => MarketData, (marketData) => marketData.company)
   market_data: MarketData[];
+
+  @OneToMany(() => MarketData, (companyQuote) => companyQuote.company)
+  company_quote: CompanyQuote[];
+
+  @OneToMany(
+    () => EarningsCalendar,
+    (earningsCalendar) => earningsCalendar.company,
+  )
+  earningsCalendar: EarningsCalendar[];
 
   @OneToMany(
     () => TechnicalIndicator,
