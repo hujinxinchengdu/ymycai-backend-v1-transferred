@@ -17,7 +17,8 @@ import {
   // getDayBeforeLatestMarketData,
   getCompanyAllFinancialReport,
 } from '../controllers';
-// import { getMarketHistoricalData } from '../services';
+import { getMarketHistoricalData } from '../services';
+import { ScheduleDailyCall } from '../utils/ScheduleCall';
 
 const router = express.Router();
 
@@ -173,15 +174,25 @@ router.get('/financial-reports/:companySymbol', async (req, res) => {
   }
 });
 
-// router.get('/marketNewData', async (req, res) => {
-//   try {
-//     const saveStatus = await saveMarketNewData();
-//     console.log('success');
-//     res.json(saveStatus);
-//   } catch (error) {
-//     res.status(500).json({ error: error.toString() });
-//   }
-// });
+router.get('/marketNewDataSechedule', async (req, res) => {
+  try {
+    const saveStatus = await ScheduleDailyCall();
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/marketNewData', async (req, res) => {
+  try {
+    const saveStatus = await saveMarketNewData();
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
 
 // router.get('/market-latest-data/:companyID', async (req, res) => {
 //   try {

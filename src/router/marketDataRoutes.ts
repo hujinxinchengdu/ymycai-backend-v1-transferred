@@ -7,6 +7,7 @@ import {
   getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
 } from '../controllers';
+import { ScheduleDailyCall } from '../utils/ScheduleCall';
 
 const router = express.Router();
 
@@ -41,6 +42,16 @@ router.get('/historical_data', async (req, res) => {
 router.get('/save_new_market_data', async (req, res) => {
   try {
     const saveStatus = await saveMarketNewData();
+    console.log('success');
+    res.json(saveStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.get('/schedule_save_new_market_data', async (req, res) => {
+  try {
+    const saveStatus = await ScheduleDailyCall();
     console.log('success');
     res.json(saveStatus);
   } catch (error) {
