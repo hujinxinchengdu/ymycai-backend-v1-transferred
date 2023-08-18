@@ -1,6 +1,4 @@
 import express from 'express';
-
-// import { savePhoto, findPhoto } from '../controllers';
 import {
   updateNewsSummary,
   getCompanyInfoAndTags,
@@ -14,7 +12,6 @@ import {
   getDayBeforeLatestMarketData,
   getCompanyAllFinancialReport,
 } from '../controllers';
-import { getMarketHistoricalData } from '../services';
 import { ScheduleDailyCall } from '../utils/ScheduleCall';
 
 const router = express.Router();

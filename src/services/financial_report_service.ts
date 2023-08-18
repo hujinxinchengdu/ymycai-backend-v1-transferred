@@ -24,11 +24,6 @@ export async function getFinancialReportData(
       ? `${BASE_URL}/api/v3/cash-flow-statement/${companySymbol}?period=quarter&limit=400&apikey=${API_KEY}`
       : `${BASE_URL}/api/v3/cash-flow-statement/${companySymbol}?limit=120&apikey=${API_KEY}`;
 
-    // const responseIncomeStatement = await axios.get<any>(incomeStatementApiUrl);
-    // const responseBalanceSheet = await axios.get<any>(balanceSheetApiUrl);
-    // const responseCashFlowStatement = await axios.get<any>(
-    //   cashFlowStatmentApiUrl,
-    // );
     const responseIncomeStatement = await queueRequest(incomeStatementApiUrl);
     const responseBalanceSheet = await queueRequest(balanceSheetApiUrl);
     const responseCashFlowStatement = await queueRequest(
