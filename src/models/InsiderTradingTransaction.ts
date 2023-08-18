@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Company } from '.';
 
-@Entity('transactions')
+@Entity('insider_trading_transactions')
 class InsiderTradingTransaction {
   @PrimaryColumn({ type: 'varchar' })
   reportingCik: string;
