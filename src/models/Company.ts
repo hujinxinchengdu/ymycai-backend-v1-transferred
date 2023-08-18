@@ -20,6 +20,7 @@ import {
   Recommendation,
   EarningsCalendar,
   CompanyQuote,
+  InsiderTradingTransaction,
 } from '.';
 
 @Entity('companies')
@@ -115,6 +116,12 @@ class Company {
 
   @OneToMany(() => Recommendation, (recommendation) => recommendation.company)
   recommendations: Recommendation[];
+
+  @OneToMany(
+    () => InsiderTradingTransaction,
+    (insiderTradingTransaction) => insiderTradingTransaction.company,
+  )
+  insiderTradingTransaction: InsiderTradingTransaction[];
 }
 
 export { Company };

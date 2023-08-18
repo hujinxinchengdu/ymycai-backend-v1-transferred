@@ -15,3 +15,4 @@ export * from './NewsToCompanies';
 export * from './Topic';
 export * from './EarningsCalendar';
 export * from './CompanyQuote';
+export * from './InsiderTradingTransaction';
