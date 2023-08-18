@@ -1,6 +1,10 @@
 import { AppDataSource } from '../configuration';
-import { MarketData } from '../models';
-import { getMarketHistoricalData, getMarketNewData } from '../services';
+import { MarketData, Company, CompanyQuote } from '../models';
+import {
+  getCompanyQuoteData,
+  getMarketHistoricalData,
+  getMarketNewData,
+} from '../services';
 import { getAllCompanies } from './company_infomation_usecase';
 import { getCompanyIdFromSymbol } from './util/get_companyid_by_symbol';
 
@@ -33,16 +37,25 @@ async function saveMarketHistoricalData(): Promise<void> {
 async function saveMarketNewData(): Promise<void> {
   try {
     const companies = await getAllCompanies();
+
+    let allMarketData: MarketData[] = [];
+
     for (const company of companies) {
       const companySymbol = company.company_symbol;
       const companyMarketData = await getMarketNewData(
         company.company_id,
         companySymbol,
       );
-      for (const marketData of companyMarketData) {
-        await AppDataSource.manager.save(marketData);
-      }
+      allMarketData = allMarketData.concat(companyMarketData);
     }
+
+    const BATCH_SIZE = 500; // 可根据需要调整这个值
+
+    for (let i = 0; i < allMarketData.length; i += BATCH_SIZE) {
+      const batch = allMarketData.slice(i, i + BATCH_SIZE);
+      await AppDataSource.manager.save(MarketData, batch);
+    }
+
     return;
   } catch (error) {
     throw error;
@@ -139,6 +152,40 @@ async function getMarketDataByCompanySymbol(
   }
 }
 
+async function saveCompanyQuoteDataByCompanySymbolList(
+  companySymbols: string[],
+): Promise<void> {
+  try {
+    const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
+
+    for (const companyQuoteData of companyQuoteDatas) {
+      // 首先，查找与市场数据中的公司股票符号相对应的公司
+      const company = await AppDataSource.manager.findOne(Company, {
+        where: { company_symbol: companyQuoteData.symbol },
+      });
+
+      // 如果找不到公司，则继续下一次迭代
+      if (!company) {
+        console.error(
+          `Company with symbol ${companyQuoteData.symbol} not found`,
+        );
+        continue;
+      }
+
+      // 使用 TypeORM 的 save 方法保存或更新市场数据。
+      // 如果市场数据已经存在，则根据主键进行更新。
+      // 否则，将插入新记录。
+      await AppDataSource.manager.save(companyQuoteData);
+    }
+
+    console.log('Company Quote data save operation finished');
+  } catch (error) {
+    throw new Error(
+      `Error while updating Company Quote data: ${error.message}`,
+    );
+  }
+}
+
 export {
   saveMarketHistoricalData,
   getLastMarketDataForServices,
@@ -146,4 +193,5 @@ export {
   getDayBeforeLatestMarketData,
   getLatestMarketData,
   getMarketDataByCompanySymbol,
+  saveCompanyQuoteDataByCompanySymbolList,
 };

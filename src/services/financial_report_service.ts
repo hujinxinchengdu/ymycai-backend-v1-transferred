@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { FinancialReport } from '../models';
 import { v4 as uuidv4 } from 'uuid';
+import { queueRequest } from '../utils';
 
 export async function getFinancialReportData(
   companySymbol: string,
@@ -23,9 +24,14 @@ export async function getFinancialReportData(
       ? `${BASE_URL}/api/v3/cash-flow-statement/${companySymbol}?period=quarter&limit=400&apikey=${API_KEY}`
       : `${BASE_URL}/api/v3/cash-flow-statement/${companySymbol}?limit=120&apikey=${API_KEY}`;
 
-    const responseIncomeStatement = await axios.get<any>(incomeStatementApiUrl);
-    const responseBalanceSheet = await axios.get<any>(balanceSheetApiUrl);
-    const responseCashFlowStatement = await axios.get<any>(
+    // const responseIncomeStatement = await axios.get<any>(incomeStatementApiUrl);
+    // const responseBalanceSheet = await axios.get<any>(balanceSheetApiUrl);
+    // const responseCashFlowStatement = await axios.get<any>(
+    //   cashFlowStatmentApiUrl,
+    // );
+    const responseIncomeStatement = await queueRequest(incomeStatementApiUrl);
+    const responseBalanceSheet = await queueRequest(balanceSheetApiUrl);
+    const responseCashFlowStatement = await queueRequest(
       cashFlowStatmentApiUrl,
     );
 
@@ -61,9 +67,8 @@ export async function getFinancialReportData(
     }
 
     return financialReports;
-
-    return financialReports;
   } catch (error) {
+    console.log(error);
     console.error('Error fetching financial report data:', error.message);
     throw error;
   }

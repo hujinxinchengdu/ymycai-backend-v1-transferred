@@ -19,6 +19,7 @@ import {
   NewsToCompanies,
   Recommendation,
   EarningsCalendar,
+  CompanyQuote,
 } from '.';
 
 @Entity('companies')
@@ -87,6 +88,9 @@ class Company {
 
   @OneToMany(() => MarketData, (marketData) => marketData.company)
   market_data: MarketData[];
+
+  @OneToMany(() => MarketData, (companyQuote) => companyQuote.company)
+  company_quote: CompanyQuote[];
 
   @OneToMany(
     () => EarningsCalendar,

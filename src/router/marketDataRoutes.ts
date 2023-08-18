@@ -5,9 +5,28 @@ import {
   getLatestMarketData,
   getDayBeforeLatestMarketData,
   getMarketDataByCompanySymbol,
+  saveCompanyQuoteDataByCompanySymbolList,
 } from '../controllers';
 
 const router = express.Router();
+
+router.put('/company_quote', async (req, res) => {
+  try {
+    const symbolList = req.body.symbolList;
+
+    if (!symbolList || symbolList.length === 0) {
+      return res.status(400).json({ error: 'No company symbols provided' });
+    }
+
+    await saveCompanyQuoteDataByCompanySymbolList(symbolList);
+
+    return res.status(200).json({
+      message: `Successfully updated market data for ${symbolList.join(', ')}`,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.toString() });
+  }
+});
 
 router.get('/historical_data', async (req, res) => {
   try {
