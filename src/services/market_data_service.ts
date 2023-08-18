@@ -3,15 +3,17 @@ import { getFormattedDate } from '../utils';
 import { MarketData, CompanyQuote } from '../models';
 import { getLastMarketDataForServices } from '../controllers';
 import { v4 as uuidv4 } from 'uuid';
+import { queueRequest } from '../utils';
 
 const API_KEY = process.env.FINANCIAL_MODELING_KEY;
+const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
 //定义获取市场数据的函数
 export async function getMarketHistoricalData(
   companyId: string,
   companySymbol: string,
 ): Promise<MarketData[]> {
   try {
-    const response = await axios.get<any>(
+    const response = await queueRequest(
       'https://financialmodelingprep.com/api/v3/historical-price-full/' +
         companySymbol +
         '?apikey=' +
@@ -56,27 +58,24 @@ export async function getMarketNewData(
   try {
     const lastMarketData = await getLastMarketDataForServices(companyId);
     let fromDate;
-
     if (lastMarketData) {
       const nextDayDate = new Date(lastMarketData.record_time);
       nextDayDate.setDate(nextDayDate.getDate() + 1);
+      const current_date = new Date();
+      //由于如果from大于现在的日期将无效, 所以我们有这个判断
+      if (nextDayDate >= current_date) {
+        const MarketDataList: MarketData[] = [];
+        return MarketDataList;
+      }
       fromDate = getFormattedDate(nextDayDate);
     } else {
       fromDate = '1200-01-01'; // 或其他远古日期，作为默认起始日期
     }
+    console.log(fromDate);
 
-    const current_date = getFormattedDate(new Date());
+    const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
 
-    const response = await axios.get<any>(
-      'https://financialmodelingprep.com/api/v3/historical-price-full/' +
-        companySymbol +
-        '?from=' +
-        fromDate +
-        '&to=' +
-        current_date +
-        '&apikey=' +
-        API_KEY,
-    );
+    const response = await queueRequest(marketDataApiUrl);
 
     const tempdate = response.data;
     if (!tempdate['historical']) {
@@ -120,9 +119,6 @@ export async function getMarketNewData(
 export async function getCompanyQuoteData(
   companySymbols: string[],
 ): Promise<CompanyQuote[]> {
-  const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
-  const API_KEY = process.env.FINANCIAL_MODELING_KEY;
-
   const symbolsString = companySymbols.join(',');
 
   const companyQuoteEntries: CompanyQuote[] = [];
@@ -130,7 +126,7 @@ export async function getCompanyQuoteData(
   try {
     const companyQuoteDataApiUrl = `${BASE_URL}/api/v3/quote/${symbolsString}?apikey=${API_KEY}`;
 
-    const companyQuoteData = await axios.get<any>(companyQuoteDataApiUrl);
+    const companyQuoteData = await queueRequest(companyQuoteDataApiUrl);
     const quoteRawData = companyQuoteData.data;
 
     console.log(quoteRawData);

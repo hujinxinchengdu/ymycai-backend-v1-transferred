@@ -68,6 +68,6 @@ export const AppDataSource = new DataSource({
     CompanyQuote,
   ],
 
-  synchronize: true,
+  synchronize: false,
   logging: false,
 });
