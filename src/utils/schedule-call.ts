@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { saveMarketNewData } from '../controllers';
 
-export function ScheduleDailyCall() {
+export function scheduleDailyCall() {
   try {
     cron.schedule(
       '0 0 * * *',

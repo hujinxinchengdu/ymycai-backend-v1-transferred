@@ -1,3 +1,7 @@
+/**
+ * This file contains routes that proxy the "/api/financial-reports" path.
+ */
+
 import express from 'express';
 import {
   saveAllFinancialReportInfoBySymbol,
@@ -7,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.post('/:companySymbol', async (req, res) => {
+router.post('/:companySymbol', async (req, res, next) => {
   try {
     const companySymbol = req.params.companySymbol;
     const isQuarterly = req.body.isQuarterly;
@@ -23,11 +27,11 @@ router.post('/:companySymbol', async (req, res) => {
       message: `Successfully fetched financial reports for ${companySymbol}`,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.put('/:companySymbol', async (req, res) => {
+router.put('/:companySymbol', async (req, res, next) => {
   try {
     const companySymbol = req.params.companySymbol;
     const isQuarterly = req.body.isQuarterly;
@@ -42,11 +46,11 @@ router.put('/:companySymbol', async (req, res) => {
       message: `Successfully updated financial reports for ${companySymbol}`,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.get('/:companySymbol', async (req, res) => {
+router.get('/:companySymbol', async (req, res, next) => {
   try {
     const companySymbol = req.params.companySymbol;
     const isQuarterly = req.query.isQuarterly === 'true'; // Convert query param to boolean
@@ -70,7 +74,8 @@ router.get('/:companySymbol', async (req, res) => {
 
     return res.status(200).json(financialReports);
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
+
 export default router;

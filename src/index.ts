@@ -2,16 +2,20 @@ import 'reflect-metadata';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import morgan from 'morgan';
 import { AppDataSource } from './configuration';
-import companyRoutes from './router/companyRoutes';
-import newsRoutes from './router/newsRoutes';
-import marketDataRoutes from './router/marketDataRoutes';
-import financialReportRoutes from './router/financialReportRoutes';
+import companyRoutes from './router/company-routes';
+import newsRoutes from './router/news-routes';
+import marketDataRoutes from './router/market-data-routes';
+import financialReportRoutes from './router/financial-report-routes';
 import { Request, Response, NextFunction } from 'express';
 
 require('express-async-errors');
 
 const app = express();
+
+// Activate morgan logger, must be right after app definition
+app.use(morgan('dev'));
 
 app.use(cors());
 app.use(helmet());
@@ -63,21 +67,27 @@ app.get('/api/path1', async (req: Request, res: Response) => {
 //routers
 app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/marketdata', marketDataRoutes);
-app.use('/api/financial-reports', financialReportRoutes);
+app.use('/api/market_data', marketDataRoutes);
+app.use('/api/financial_reports', financialReportRoutes);
 
 // Global error handler
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'An error occurred.' });
-  },
-);
+// Referred to https://expressjs.com/en/guide/error-handling.html
+function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  // Check if response headers have already been sent to the client.
+  // If they have been sent, pass the error to the next middleware.
+  // This prevents issues when an error occurs after response data has started sending.
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  return res.status(500).json({ error: err.message });
+}
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8111;
 

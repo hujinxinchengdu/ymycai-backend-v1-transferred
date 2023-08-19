@@ -21,7 +21,7 @@ import {
   EarningsCalendar,
   CompanyQuote,
   InsiderTradingTransaction,
-} from '.';
+} from '..';
 
 @Entity('companies')
 class Company {
