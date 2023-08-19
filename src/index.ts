@@ -71,17 +71,23 @@ app.use('/api/market_data', marketDataRoutes);
 app.use('/api/financial_reports', financialReportRoutes);
 
 // Global error handler
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'An error occurred.' });
-  },
-);
+// Referred to https://expressjs.com/en/guide/error-handling.html
+function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  // Check if response headers have already been sent to the client.
+  // If they have been sent, pass the error to the next middleware.
+  // This prevents issues when an error occurs after response data has started sending.
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  return res.status(500).json({ error: err.message });
+}
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8111;
 
