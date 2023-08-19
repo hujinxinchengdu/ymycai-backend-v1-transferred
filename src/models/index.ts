@@ -16,3 +16,8 @@ export * from './db_tables/Topic';
 export * from './db_tables/EarningsCalendar';
 export * from './db_tables/CompanyQuote';
 export * from './db_tables/InsiderTradingTransaction';
+
+export * from './requests/stocks';
+export * from './requests/news';
+export * from './requests/company';
+export * from './requests/market-data';
