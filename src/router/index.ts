@@ -1,4 +1,3 @@
-export * from './routes';
 export * from './companyRoutes';
 export * from './marketDataRoutes';
 export * from './newsRoutes';
