@@ -1,3 +1,7 @@
+/**
+ * This file contains routes that proxy the "/api/news" path.
+ */
+
 import express from 'express';
 import {
   findNewsByTopic,
