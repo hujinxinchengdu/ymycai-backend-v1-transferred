@@ -15,7 +15,7 @@ const router = express.Router();
 /**
  * 通过公司的Symbol获取单个公司的信息
  */
-router.get('/companyinfos/:companySymbol', async (req, res) => {
+router.get('/company_infos/:companySymbol', async (req, res) => {
   try {
     const companySymbol = req.params.companySymbol;
     const companyInfo = await getCompanyInfoAndTags(companySymbol);
@@ -28,7 +28,7 @@ router.get('/companyinfos/:companySymbol', async (req, res) => {
 /**
  * 通过公司Symbol的list来获取多个公司的信息.
  */
-router.post('/companyinfos', async (req, res) => {
+router.post('/company_infos', async (req, res) => {
   try {
     const companySymbols = req.body.companySymbols; // 从请求体中获取公司符号列表
     if (!Array.isArray(companySymbols)) {

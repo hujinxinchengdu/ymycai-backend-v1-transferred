@@ -67,8 +67,8 @@ app.get('/api/path1', async (req: Request, res: Response) => {
 //routers
 app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/marketdata', marketDataRoutes);
-app.use('/api/financial-reports', financialReportRoutes);
+app.use('/api/market_data', marketDataRoutes);
+app.use('/api/financial_reports', financialReportRoutes);
 
 // Global error handler
 app.use(
