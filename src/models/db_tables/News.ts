@@ -45,6 +45,9 @@ class News {
   @Column({ type: 'varchar', default: 'n/a' })
   ai_summary_ch: string;
 
+  @Column({ type: 'boolean', default: false })
+  is_generate: boolean;
+
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];
 
