@@ -3,10 +3,10 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { AppDataSource } from './configuration';
-import companyRoutes from './router/companyRoutes';
-import newsRoutes from './router/newsRoutes';
-import marketDataRoutes from './router/marketDataRoutes';
-import financialReportRoutes from './router/financialReportRoutes';
+import companyRoutes from './router/company-routes';
+import newsRoutes from './router/news-routes';
+import marketDataRoutes from './router/market-data-routes';
+import financialReportRoutes from './router/financial-report-routes';
 import { Request, Response, NextFunction } from 'express';
 
 require('express-async-errors');

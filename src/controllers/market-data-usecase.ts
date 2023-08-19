@@ -2,8 +2,8 @@ import { In } from 'typeorm';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
-import { getAllCompanies } from './company_infomation_usecase';
-import { getCompanyIdFromSymbol } from './util/get_companyid_by_symbol';
+import { getAllCompanies } from './company-infomation-usecase';
+import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
 
 async function saveMarketNewData(): Promise<void> {
   try {
