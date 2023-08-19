@@ -10,7 +10,7 @@ import {
   JoinTable,
 } from 'typeorm';
 
-import { Company, News } from '.';
+import { Company, News } from '..';
 
 @Entity('news_to_companies')
 class NewsToCompanies {

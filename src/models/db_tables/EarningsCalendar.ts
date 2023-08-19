@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
-import { Company } from '.';
+import { Company } from '..';
 
 @Entity('earnings_calendar')
 class EarningsCalendar {

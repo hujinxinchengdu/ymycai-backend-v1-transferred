@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToMany, OneToMany, PrimaryColumn } from 'typeorm';
-import { Company, User, WatchlistToCompany } from '.';
+import { Company, User, WatchlistToCompany } from '..';
 
 @Entity('watchlists')
 class Watchlist {

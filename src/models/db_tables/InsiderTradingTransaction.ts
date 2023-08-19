@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Company } from '.';
+import { Company } from '..';
 
 /**
     Symbol — company’s symbol.
