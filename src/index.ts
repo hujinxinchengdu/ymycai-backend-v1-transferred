@@ -3,8 +3,6 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { AppDataSource } from './configuration';
-//router
-import router from './router/routes';
 import companyRoutes from './router/companyRoutes';
 import newsRoutes from './router/newsRoutes';
 import marketDataRoutes from './router/marketDataRoutes';
@@ -63,7 +61,6 @@ app.get('/api/path1', async (req: Request, res: Response) => {
 });
 
 //routers
-app.use('/', router);
 app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/marketdata', marketDataRoutes);
