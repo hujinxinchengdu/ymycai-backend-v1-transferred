@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import morgan from 'morgan';
 import { AppDataSource } from './configuration';
 import companyRoutes from './router/company-routes';
 import newsRoutes from './router/news-routes';
@@ -12,6 +13,9 @@ import { Request, Response, NextFunction } from 'express';
 require('express-async-errors');
 
 const app = express();
+
+// Activate morgan logger, must be right after app definition
+app.use(morgan('dev'));
 
 app.use(cors());
 app.use(helmet());
