@@ -70,6 +70,6 @@ export const AppDataSource = new DataSource({
     InsiderTradingTransaction,
   ],
 
-  synchronize: true,
-  logging: false,
+  synchronize: false,
+  logging: true,
 });
