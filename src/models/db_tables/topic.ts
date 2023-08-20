@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryColumn, ManyToMany } from 'typeorm';
-import { News } from '.';
+import { News } from '..';
 
 @Entity('topics')
 class Topic {

@@ -1,3 +1,7 @@
+/**
+ * This file contains routes that proxy the "/api/marketdata" path.
+ */
+
 import express from 'express';
 import {
   saveMarketNewData,
@@ -7,11 +11,11 @@ import {
   saveCompanyQuoteDataByCompanySymbolList,
   getCompanyQuoteDataByCompanySymbolList,
 } from '../controllers';
-import { ScheduleDailyCall } from '../utils/ScheduleCall';
+import { scheduleDailyCall } from '../utils/schedule-call';
 
 const router = express.Router();
 
-router.put('/company_quote', async (req, res) => {
+router.put('/company_quote', async (req, res, next) => {
   try {
     const symbolList = req.body.symbolList;
 
@@ -25,11 +29,11 @@ router.put('/company_quote', async (req, res) => {
       message: `Successfully updated market data for ${symbolList.join(', ')}`,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.put('/save_new_market_data', async (req, res) => {
+router.put('/save_new_market_data', async (req, res, next) => {
   try {
     await saveMarketNewData();
     console.log('success');
@@ -37,51 +41,51 @@ router.put('/save_new_market_data', async (req, res) => {
       .status(200)
       .json({ message: `Successfully updated all market data` });
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.get('/schedule_save_new_market_data', async (req, res) => {
+router.get('/schedule_save_new_market_data', async (req, res, next) => {
   try {
-    const saveStatus = await ScheduleDailyCall();
+    const saveStatus = await scheduleDailyCall();
     console.log('success');
     res.json(saveStatus);
   } catch (error) {
-    res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.get('/latest_day_data/:companySymbol', async (req, res) => {
+router.get('/latest_day_data/:companySymbol', async (req, res, next) => {
   try {
     const companySymbol = req.params.companySymbol;
     const saveStatus = await getLatestMarketData(companySymbol);
     return res.status(200).json(saveStatus);
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.get('/day_before_latest_data/:companySymbol', async (req, res) => {
+router.get('/day_before_latest_data/:companySymbol', async (req, res, next) => {
   try {
     const companySymbol = req.params.companySymbol;
     const saveStatus = await getDayBeforeLatestMarketData(companySymbol);
     return res.status(200).json(saveStatus);
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 
-router.get('/:symbol', async (req, res) => {
+router.get('/:symbol', async (req, res, next) => {
   try {
     const symbol = req.params.symbol; // 从URL获取股票代码
     const marketData = await getMarketDataByCompanySymbol(symbol);
     return res.status(200).json(marketData); // 明确设置状态码为200并返回JSON
   } catch (error) {
-    return res.status(500).json({ error: error.message }); // 设置状态码为500并返回错误信息
+    return next(error);
   }
 });
 
-router.post('/company_quote', async (req, res) => {
+router.post('/company_quote', async (req, res, next) => {
   try {
     const symbolList: string[] = req.body.symbolList;
 
@@ -98,7 +102,7 @@ router.post('/company_quote', async (req, res) => {
       data: companyQuotes,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.toString() });
+    return next(error);
   }
 });
 

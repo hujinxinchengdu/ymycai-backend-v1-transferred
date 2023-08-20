@@ -8,7 +8,7 @@ import {
   JoinTable,
 } from 'typeorm';
 
-import { NewsToCompanies, Topic } from '.';
+import { NewsToCompanies, Topic } from '..';
 
 @Entity('news')
 class News {
@@ -39,14 +39,20 @@ class News {
   @CreateDateColumn()
   ai_summary_time: Date;
 
-  @Column({ type: 'varchar', default: 'n/a' })
+  @Column({ type: 'text', default: 'n/a' })
   ai_summary_en: string;
 
-  @Column({ type: 'varchar', default: 'n/a' })
+  @Column({ type: 'text', default: 'n/a' })
   ai_summary_ch: string;
 
   @Column({ type: 'boolean', default: false })
   is_generate: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  is_scrap: boolean;
+
+  @Column({ type: 'text', default: 'n/a' })
+  original_content: string;
 
   @OneToMany(() => NewsToCompanies, (newsToCompanies) => newsToCompanies.news)
   companyConnection: NewsToCompanies[];

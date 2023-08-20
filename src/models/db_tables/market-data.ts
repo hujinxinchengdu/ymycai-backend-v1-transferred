@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Company } from '.';
+import { Company } from '..';
 
 @Entity('market_data')
 class MarketData {

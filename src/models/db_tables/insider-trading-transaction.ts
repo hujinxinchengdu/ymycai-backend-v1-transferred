@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Company } from '.';
+import { Company } from '..';
 
 /**
     Symbol — company’s symbol.
@@ -69,8 +69,11 @@ class InsiderTradingTransaction {
   @Column({ type: 'varchar' })
   link: string;
 
+  @Column({ type: 'varchar' })
+  companycik: string;
+
   @ManyToOne(() => Company, (company) => company.insiderTradingTransaction)
-  @JoinColumn({ name: 'companyCik', referencedColumnName: 'company_id' }) // Assuming that the company entity has a company_id as its primary key.
+  @JoinColumn({ name: 'company_id', referencedColumnName: 'company_id' }) // Assuming that the company entity has a company_id as its primary key.
   company: Company;
 }
 
