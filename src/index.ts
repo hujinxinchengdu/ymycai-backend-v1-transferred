@@ -33,7 +33,9 @@ const requestLimiterMiddleware = (
   next: NextFunction,
 ) => {
   // 仅针对特定的 API 路径应用限制
-  const restrictedPaths: string[] = []; // 你的特定路径列表
+  const restrictedPaths: string[] = [
+    /*'/api/path1', '/api/path2'*/
+  ]; // 你的特定路径列表
 
   if (restrictedPaths.includes(req.path)) {
     // 移除已过期的请求记录
