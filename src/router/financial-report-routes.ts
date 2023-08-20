@@ -8,6 +8,11 @@ import {
   updateFinancialReportInfoBySymbol,
   getCompanyAllFinancialReport,
 } from '../controllers';
+import {
+  PostFinancialReportResponseModel,
+  PutFinancialReportResponseModel,
+  GetFinancialReportResponseModel,
+} from '../models';
 
 const router = express.Router();
 
@@ -17,7 +22,7 @@ const router = express.Router();
  *
  * @param {}
  *
- * @returns {}
+ * @returns {PostFinancialReportResponseModel}
  */
 router.post(
   '/:companySymbol',
@@ -33,9 +38,10 @@ router.post(
       }
 
       await saveAllFinancialReportInfoBySymbol(companySymbol, isQuarterly);
+
       return res.status(200).json({
         message: `Successfully fetched financial reports for ${companySymbol}`,
-      });
+      } as unknown as PostFinancialReportResponseModel);
     } catch (error) {
       return next(error);
     }
@@ -48,7 +54,7 @@ router.post(
  *
  * @param {}
  *
- * @returns {}
+ * @returns {PutFinancialReportResponseModel}
  */
 router.put(
   '/:companySymbol',
@@ -62,10 +68,12 @@ router.put(
           .status(400)
           .json({ error: 'isQuarterly must be a boolean value.' });
       }
+
       await updateFinancialReportInfoBySymbol(companySymbol, isQuarterly);
+
       return res.status(200).json({
         message: `Successfully updated financial reports for ${companySymbol}`,
-      });
+      } as unknown as PutFinancialReportResponseModel);
     } catch (error) {
       return next(error);
     }
@@ -78,7 +86,7 @@ router.put(
  *
  * @param {}
  *
- * @returns {}
+ * @returns {GetFinancialReportResponseModel}
  */
 router.get(
   '/:companySymbol',
@@ -97,12 +105,13 @@ router.get(
           .json({ error: 'isQuarterly must be a boolean value.' });
       }
 
-      const financialReports = await getCompanyAllFinancialReport(
-        companySymbol,
-        isQuarterly,
-        from,
-        to,
-      );
+      const financialReports: GetFinancialReportResponseModel =
+        (await getCompanyAllFinancialReport(
+          companySymbol,
+          isQuarterly,
+          from,
+          to,
+        )) as unknown as GetFinancialReportResponseModel;
 
       return res.status(200).json(financialReports);
     } catch (error) {

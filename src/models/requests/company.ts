@@ -1,9 +1,3 @@
-export interface GetCompanyInfosReqParamsModel extends Array<string> {}
-
-export interface GetMultiCompanyInfosReqBodyModel {
-  companySymbols: string[];
-}
-
 export interface CompanyQuotesModel {
   companies: CompanyInfoModel[];
 }
@@ -19,3 +13,21 @@ export interface CompanyInfoModel {
   info_create_time: string;
   info_update_time: string;
 }
+
+// GET /api/companies/company_infos/:companySymbol
+export interface GetCompanyInfoResponseModel extends CompanyInfoModel {}
+
+// POST /api/companies/company_infos
+export interface GetMultiCompanyInfosReqBodyModel {
+  companySymbols: string[];
+}
+
+export interface GetMultiCompanyInfosResponseModel
+  extends Array<CompanyInfoModel> {}
+
+// GET /api/companies/all
+export interface GetAllCompanyInfosResponseModel
+  extends Array<CompanyInfoModel> {}
+
+// GET /api/companies/all_symbol
+export interface GetAllCompanySymbolsResponseModel extends Array<string> {}

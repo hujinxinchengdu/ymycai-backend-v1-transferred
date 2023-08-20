@@ -9,6 +9,12 @@ import {
   getAllCompanies,
   getAllCompanySymbols,
 } from '../controllers';
+import {
+  GetCompanyInfoResponseModel,
+  GetMultiCompanyInfosResponseModel,
+  GetAllCompanyInfosResponseModel,
+  GetAllCompanySymbolsResponseModel,
+} from '../models';
 
 const router = express.Router();
 
@@ -18,14 +24,19 @@ const router = express.Router();
  *
  * @param {string} companySymbol 公司symbol
  *
- * @returns {Array<CompanyInfoModel>} 该公司信息
+ * @returns {GetCompanyInfoResponseModel} 该公司信息
  */
 router.get(
   '/company_infos/:companySymbol',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const companySymbol = req.params.companySymbol;
-      const companyInfo = await getCompanyInfoAndTags(companySymbol);
+
+      const companyInfo: GetCompanyInfoResponseModel =
+        (await getCompanyInfoAndTags(
+          companySymbol,
+        )) as unknown as GetCompanyInfoResponseModel;
+
       return res.status(200).json(companyInfo);
     } catch (error) {
       return next(error);
@@ -37,9 +48,9 @@ router.get(
  * @route POST /api/companies/company_infos
  * @description 通过包含多个公司symbol的list来获取多个公司的信息
  *
- * @param { GetMultiCompanyInfosReqBodyModel} req.body 包含公司symbol列表
+ * @param { GetCompanyInfosReqBodyModel} req.body 包含公司symbol列表
  *
- * @returns {Array<CompanyInfoModel>} 公司信息列表
+ * @returns {GetMultiCompanyInfosResponseModel} 公司信息列表
  */
 router.post(
   '/company_infos',
@@ -51,7 +62,12 @@ router.post(
           error: 'Invalid input: companySymbols should be an array of strings.',
         });
       }
-      const companyInfoList = await getListOfCompanyInfoAndTags(companySymbols);
+
+      const companyInfoList: GetMultiCompanyInfosResponseModel =
+        (await getListOfCompanyInfoAndTags(
+          companySymbols,
+        )) as unknown as GetMultiCompanyInfosResponseModel;
+
       return res.status(200).json(companyInfoList);
     } catch (error) {
       return next(error);
@@ -63,12 +79,14 @@ router.post(
  * @route GET /api/companies/all
  * @description 获取所有公司信息
  *
- * @returns {Array<CompanyInfoModel>} 公司信息列表
+ * @returns {GetAllCompanyInfosResponseModel} 公司信息列表
  */
 router.get('/all', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const companies = await getAllCompanies();
-    res.json(companies);
+    const companies: GetAllCompanyInfosResponseModel =
+      (await getAllCompanies()) as unknown as GetAllCompanyInfosResponseModel;
+
+    return res.json(companies);
   } catch (error) {
     return next(error);
   }
@@ -78,14 +96,16 @@ router.get('/all', async (req: Request, res: Response, next: NextFunction) => {
  * @route GET /api/companies/all_symbol
  * @description 获取所有公司symbol列表
  *
- * @returns {Array<string>} 公司symbol列表
+ * @returns {GetAllCompanySymbolsResponseModel} 公司symbol列表
  */
 router.get(
   '/all_symbol',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const company_symbols: string[] = await getAllCompanySymbols();
-      res.json(company_symbols);
+      const company_symbols: GetAllCompanySymbolsResponseModel =
+        (await getAllCompanySymbols()) as unknown as GetAllCompanySymbolsResponseModel;
+
+      return res.json(company_symbols);
     } catch (error) {
       return next(error);
     }
