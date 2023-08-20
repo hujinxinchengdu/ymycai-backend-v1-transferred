@@ -59,11 +59,6 @@ const requestLimiterMiddleware = (
 // 应用限制中间件到特定路径
 app.use(requestLimiterMiddleware);
 
-// 路由处理
-app.get('/api/path1', async (req: Request, res: Response) => {
-  // 处理 path1 的逻辑
-});
-
 //routers
 app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
