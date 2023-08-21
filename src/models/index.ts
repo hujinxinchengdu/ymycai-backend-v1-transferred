@@ -21,3 +21,4 @@ export * from './requests/stocks';
 export * from './requests/news';
 export * from './requests/company';
 export * from './requests/market-data';
+export * from './requests/financial-report';
