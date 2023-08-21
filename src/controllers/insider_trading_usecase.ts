@@ -1,4 +1,4 @@
-import { InsiderTradingTransaction, MarketData } from '../models';
+import { InsiderTradingTransaction } from '../models';
 import { AppDataSource } from '../configuration';
 
 import { getInsidetrader } from '../services';
@@ -19,4 +19,19 @@ async function saveAllTransaction(): Promise<void> {
   }
 }
 
-export { saveAllTransaction };
+async function getTransactionBySymbol(
+  companySymbol: string,
+): Promise<InsiderTradingTransaction[] | null> {
+  try {
+    const transactionData = await AppDataSource.manager
+      .createQueryBuilder(InsiderTradingTransaction, 'itt')
+      .where('itt.symbol = :companySymbol', { companySymbol })
+      .orderBy('itt.transactionDate', 'DESC')
+      .getMany();
+    return transactionData;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export { saveAllTransaction, getTransactionBySymbol };
