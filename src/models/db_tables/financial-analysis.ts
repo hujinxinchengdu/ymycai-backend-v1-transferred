@@ -20,6 +20,9 @@ class FinancialAnalysis {
   @Column({ type: 'varchar' })
   company_id: string;
 
+  @Column({ type: 'varchar' })
+  type: string;
+
   @CreateDateColumn()
   publish_time: Date;
 
