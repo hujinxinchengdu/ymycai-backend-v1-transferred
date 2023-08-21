@@ -8,7 +8,7 @@ async function saveAllTransaction(): Promise<void> {
     const transactions = await getInsidetrader();
 
     const BATCH_SIZE = 500; // 可根据需要调整这个值
-
+    console.log(transactions);
     for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
       const batch = transactions.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(InsiderTradingTransaction, batch);

@@ -25,6 +25,9 @@ import { Company } from '..';
 @Entity('insider_trading_transactions')
 class InsiderTradingTransaction {
   @PrimaryColumn({ type: 'varchar' })
+  transaction_id: string;
+
+  @Column({ type: 'varchar' })
   reportingCik: string;
 
   @Column({ type: 'varchar' })
