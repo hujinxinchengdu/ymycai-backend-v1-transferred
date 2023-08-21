@@ -1,6 +1,9 @@
 import { AppDataSource } from '../configuration';
-import { getFinancialReportData } from '../services';
-import { Company, FinancialReport } from '../models';
+import {
+  getFinancialReportData,
+  formFinancialReportAnalysis,
+} from '../services';
+import { Company, FinancialReport, FinancialAnalysis } from '../models';
 import { Between, MoreThan, LessThan } from 'typeorm';
 
 async function saveAllFinancialReportInfoBySymbol(
@@ -57,9 +60,12 @@ async function updateFinancialReportInfoBySymbol(
     throw new Error('The isQuarterly parameter must be a boolean.');
   }
 
+  //确定是年报还是季报
+
   const reportType = isQuarterly ? 'Quarterly' : 'Annual';
 
   try {
+    //查找公司id
     const company = await AppDataSource.manager.findOne(Company, {
       where: { company_symbol: companySymbol },
     });
@@ -67,7 +73,7 @@ async function updateFinancialReportInfoBySymbol(
     if (!company) {
       throw new Error(`Company with symbol ${companySymbol} not found`);
     }
-
+    //查找距离current time最近的已有数据
     const latestReportInDb = await AppDataSource.manager.findOne(
       FinancialReport,
       {
@@ -80,6 +86,7 @@ async function updateFinancialReportInfoBySymbol(
       ? latestReportInDb.publish_time
       : new Date(0);
 
+    //得到财报的数据
     const financialReports = await getFinancialReportData(
       companySymbol,
       isQuarterly,
@@ -87,9 +94,17 @@ async function updateFinancialReportInfoBySymbol(
     );
 
     const reportsToSave: FinancialReport[] = [];
+    const analysesToSave: FinancialAnalysis[] = [];
 
     for (const report of financialReports) {
       if (report.publish_time > latestDateInDb) {
+        const financialAnalysis = formFinancialReportAnalysis(
+          report,
+          company,
+          reportType,
+        );
+
+        analysesToSave.push(financialAnalysis);
         reportsToSave.push(report);
       } else {
         break;
@@ -101,7 +116,10 @@ async function updateFinancialReportInfoBySymbol(
 
     for (let i = 0; i < reportsToSave.length; i += BATCH_SIZE) {
       const batch = reportsToSave.slice(i, i + BATCH_SIZE);
+      const analysesBatch = analysesToSave.slice(i, i + BATCH_SIZE);
+
       await AppDataSource.manager.save(FinancialReport, batch);
+      await AppDataSource.manager.save(FinancialAnalysis, analysesBatch);
     }
 
     console.log('finish');
@@ -115,7 +133,7 @@ async function getCompanyAllFinancialReport(
   isQuarterly?: boolean,
   from?: Date,
   to?: Date,
-): Promise<any> {
+): Promise<FinancialReport[]> {
   try {
     const company = await AppDataSource.manager.findOne(Company, {
       where: { company_symbol: companySymbol },
