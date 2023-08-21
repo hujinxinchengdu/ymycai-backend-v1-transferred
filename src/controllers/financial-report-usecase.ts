@@ -133,7 +133,7 @@ async function getCompanyAllFinancialReport(
   isQuarterly?: boolean,
   from?: Date,
   to?: Date,
-): Promise<any> {
+): Promise<FinancialReport[]> {
   try {
     const company = await AppDataSource.manager.findOne(Company, {
       where: { company_symbol: companySymbol },

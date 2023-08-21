@@ -1,5 +1,6 @@
 import { FinancialReport, FinancialAnalysis, Company } from '../models';
 import { v4 as uuidv4 } from 'uuid';
+import { FinancialAnalysisMetrics } from '../models';
 
 function formFinancialReportAnalysis(
   f: FinancialReport,
@@ -17,7 +18,9 @@ function formFinancialReportAnalysis(
   return financialAnalysis;
 }
 
-function calculateFinancialIndicators(f: FinancialReport): any {
+function calculateFinancialIndicators(
+  f: FinancialReport,
+): FinancialAnalysisMetrics {
   const netIncome = f.income_statement.netIncome;
   const totalStockholdersEquity = f.balancesheet.totalStockholdersEquity;
   const totalAssets = f.balancesheet.totalAssets;

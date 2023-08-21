@@ -27,3 +27,21 @@ export interface GetFinancialReportReqParamsModel {
 }
 
 export interface GetFinancialReportResponseModel extends FinancialReport {}
+
+export interface FinancialAnalysisMetrics {
+  ROE: number;
+  ROA: number;
+  equityMutiplier: number;
+  operatingProfitMargin: number;
+  totalAssetTurnover: number;
+  netIncome: number;
+  operatingIncome: number;
+  debtToAssetRatio: number;
+  totalIncome: number;
+  totalCosts: number;
+  eps: number;
+  epsdiluted: number;
+  undistributedEPS: number;
+  cashFlowPerShare: number;
+  netProfitMargin: number;
+}
