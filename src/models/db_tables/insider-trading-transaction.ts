@@ -69,11 +69,8 @@ class InsiderTradingTransaction {
   @Column({ type: 'varchar' })
   link: string;
 
-  @Column({ type: 'varchar' })
-  companycik: string;
-
   @ManyToOne(() => Company, (company) => company.insiderTradingTransaction)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'company_id' }) // Assuming that the company entity has a company_id as its primary key.
+  @JoinColumn({ name: 'symbol', referencedColumnName: 'company_symbol' }) // Assuming that the company entity has a company_id as its primary key.
   company: Company;
 }
 
