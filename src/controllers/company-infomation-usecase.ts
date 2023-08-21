@@ -102,9 +102,22 @@ async function getAllCompanySymbols(): Promise<string[]> {
   }
 }
 
+async function findCompanyBySymbol(symbol: string): Promise<Company | null> {
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: symbol },
+    });
+    return company as unknown as Company;
+  } catch (error) {
+    console.error('Error fetching company:', error.message);
+    return null;
+  }
+}
+
 export {
   getCompanyInfoAndTags,
   getListOfCompanyInfoAndTags,
   getAllCompanies,
   getAllCompanySymbols,
+  findCompanyBySymbol,
 };

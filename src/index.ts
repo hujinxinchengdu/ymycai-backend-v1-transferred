@@ -8,6 +8,7 @@ import companyRoutes from './router/company-routes';
 import newsRoutes from './router/news-routes';
 import marketDataRoutes from './router/market-data-routes';
 import financialReportRoutes from './router/financial-report-routes';
+import insiderTransactionRoutes from './router/insider-transaction-routes';
 import { Request, Response, NextFunction } from 'express';
 
 require('express-async-errors');
@@ -66,6 +67,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/market_data', marketDataRoutes);
 app.use('/api/financial_reports', financialReportRoutes);
+app.use('/api/insider_transactions', insiderTransactionRoutes);
 
 // Global error handler
 // Referred to https://expressjs.com/en/guide/error-handling.html
