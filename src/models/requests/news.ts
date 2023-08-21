@@ -23,3 +23,11 @@ export interface GetNewsResponseModel {
 export interface FilteredNewsDataModel {
   [key: string]: { news: NewsItemModel[] };
 }
+
+// GET /api/news/topic/:topic
+
+// GET /api/news/company/:company
+
+// PUT /api/news/:newsId
+
+// GET /api/news/all
