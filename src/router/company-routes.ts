@@ -8,12 +8,16 @@ import {
   getListOfCompanyInfoAndTags,
   getAllCompanies,
   getAllCompanySymbols,
+  getAllTags,
+  getCompanyQuoteByTag,
 } from '../controllers';
 import {
   GetCompanyInfoResponseModel,
   GetMultiCompanyInfosResponseModel,
   GetAllCompanyInfosResponseModel,
   GetAllCompanySymbolsResponseModel,
+  GetAllTagsModel,
+  GetCompaniesWithQuotesByTag,
 } from '../models';
 
 const router = express.Router();
@@ -86,7 +90,7 @@ router.get('/all', async (req: Request, res: Response, next: NextFunction) => {
     const companies: GetAllCompanyInfosResponseModel =
       (await getAllCompanies()) as unknown as GetAllCompanyInfosResponseModel;
 
-    return res.json(companies);
+    return res.status(200).json(companies);
   } catch (error) {
     return next(error);
   }
@@ -96,7 +100,7 @@ router.get('/all', async (req: Request, res: Response, next: NextFunction) => {
  * @route GET /api/companies/all_symbol
  * @description 获取所有公司symbol列表
  *
- * @returns {GetAllCompanySymbolsResponseModel} 公司symbol列表
+ * @returns {GetAllCompanySymbolsResponseModel} 公司symbol列表json列表
  */
 router.get(
   '/all_symbol',
@@ -105,7 +109,48 @@ router.get(
       const company_symbols: GetAllCompanySymbolsResponseModel =
         (await getAllCompanySymbols()) as unknown as GetAllCompanySymbolsResponseModel;
 
-      return res.json(company_symbols);
+      return res.status(200).json(company_symbols);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/companies/all_tags
+ * @description 获取所有和公司的tags列表(行业列表)
+ *
+ * @returns {GetAllTagsModel} tags 列表
+ */
+router.get(
+  '/all_tags',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tags: GetAllTagsModel =
+        (await getAllTags()) as unknown as GetAllTagsModel;
+      return res.status(200).json(tags);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/companies/companies_quotes_by_tag/:tag_id
+ * @description 获取指定tag名称的所有公司及其最新报价
+ *
+ * @returns {GetCompaniesWithQuotesByTag} 公司及其最新报价列表
+ */
+router.get(
+  '/companies_quotes_by_tag/:tag_id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tag_id = req.params.tag_id;
+      const companiesWithQuotes: GetCompaniesWithQuotesByTag =
+        (await getCompanyQuoteByTag(
+          tag_id,
+        )) as unknown as GetCompaniesWithQuotesByTag;
+      return res.status(200).json(companiesWithQuotes);
     } catch (error) {
       return next(error);
     }

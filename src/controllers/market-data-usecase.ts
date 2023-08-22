@@ -129,7 +129,7 @@ async function saveCompanyQuoteDataByCompanySymbolList(
   try {
     const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
 
-    for (const companyQuoteData of companyQuoteDatas) {
+    for (let companyQuoteData of companyQuoteDatas) {
       // 首先，查找与市场数据中的公司股票符号相对应的公司
       const company = await AppDataSource.manager.findOne(Company, {
         where: { company_symbol: companyQuoteData.symbol },
@@ -142,6 +142,11 @@ async function saveCompanyQuoteDataByCompanySymbolList(
         );
         continue;
       }
+
+      companyQuoteData = {
+        ...companyQuoteData,
+        company_id: company.company_id,
+      };
 
       // 使用 TypeORM 的 save 方法保存或更新市场数据。
       // 如果市场数据已经存在，则根据主键进行更新。

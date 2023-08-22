@@ -90,7 +90,7 @@ class Company {
   @OneToMany(() => MarketData, (marketData) => marketData.company)
   market_data: MarketData[];
 
-  @OneToMany(() => MarketData, (companyQuote) => companyQuote.company)
+  @OneToMany(() => CompanyQuote, (companyQuote) => companyQuote.company)
   company_quote: CompanyQuote[];
 
   @OneToMany(

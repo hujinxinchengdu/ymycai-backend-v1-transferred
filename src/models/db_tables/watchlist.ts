@@ -1,5 +1,12 @@
-import { Entity, Column, ManyToMany, OneToMany, PrimaryColumn } from 'typeorm';
-import { Company, User, WatchlistToCompany } from '..';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+  JoinColumn,
+} from 'typeorm';
+import { User, WatchlistToCompany } from '..';
 
 @Entity('watchlists')
 class Watchlist {
@@ -18,8 +25,8 @@ class Watchlist {
   )
   companyConnection: WatchlistToCompany[];
 
-  // Assuming User to Watchlist is a one-to-many relationship
-  @OneToMany(() => User, (user) => user.watchlists)
+  @ManyToOne(() => User, (user) => user.watchlists)
+  @JoinColumn({ name: 'user_id' }) // This denotes the foreign key column.
   user: User;
 }
 
