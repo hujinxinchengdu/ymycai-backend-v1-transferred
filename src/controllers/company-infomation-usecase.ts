@@ -164,6 +164,18 @@ async function getCompanyQuoteByTag(
     }));
 
   return companyWithLatestQuoteList;
+    
+async function findCompanyBySymbol(symbol: string): Promise<Company | null> {
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: symbol },
+    });
+    return company as unknown as Company;
+  } catch (error) {
+    console.error('Error fetching company:', error.message);
+    return null;
+  }
+
 }
 
 export {
@@ -173,4 +185,5 @@ export {
   getAllCompanySymbols,
   getAllTags,
   getCompanyQuoteByTag,
+  findCompanyBySymbol,
 };
