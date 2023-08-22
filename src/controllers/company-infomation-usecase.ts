@@ -1,5 +1,6 @@
 import { AppDataSource } from '../configuration';
-import { Company } from '../models';
+import { SelectQueryBuilder } from 'typeorm';
+import { Company, Tag, CompanyQuote } from '../models';
 
 interface TagInfoModel {
   tag_id: string;
@@ -17,6 +18,12 @@ interface CompanyInfoModel {
 
 interface CompanyInfoListModel {
   companies: CompanyInfoModel[];
+}
+
+interface CompanyWithLatestQuoteModel {
+  company_name: string;
+  company_symbol: string;
+  latestQuote: CompanyQuote;
 }
 
 async function getCompanyInfoAndTags(
@@ -102,9 +109,68 @@ async function getAllCompanySymbols(): Promise<string[]> {
   }
 }
 
+async function getAllTags(): Promise<Tag[]> {
+  const tags = await AppDataSource.manager.find(Tag);
+  return tags;
+}
+
+async function getCompanyQuoteByTag(
+  id: string,
+): Promise<CompanyWithLatestQuoteModel[]> {
+  // Find tag by name
+  const tag = await AppDataSource.manager.findOne(Tag, {
+    where: { tag_id: id },
+  });
+
+  if (!tag) throw new Error('Tag not found!');
+
+  // Find companies associated with the tag using QueryBuilder
+  const companies = await AppDataSource.manager
+    .createQueryBuilder(Company, 'company')
+    .select([
+      'company.company_name',
+      'company.company_symbol',
+      'company.company_id',
+    ])
+    .where((qb: SelectQueryBuilder<Company>) => {
+      const subQuery = qb
+        .subQuery()
+        .select('company_tag.company_id')
+        .from('company_to_tags', 'company_tag')
+        .where('company_tag.tag_id = :tagId')
+        .getQuery();
+      return 'company.company_id IN ' + subQuery;
+    })
+    .setParameter('tagId', tag.tag_id)
+    .getMany();
+
+  const companyIds = companies.map((company) => company.company_id);
+
+  // Fetch the latest quotes for all the companies in one go
+  const latestQuotes = await AppDataSource.manager.query(`
+    SELECT * FROM company_quote
+    WHERE company_id IN (${companyIds.map((id) => `'${id}'`).join(',')})
+    ORDER BY record_time DESC
+    LIMIT ${companyIds.length}
+  `);
+
+  const companyWithLatestQuoteList: CompanyWithLatestQuoteModel[] =
+    companies.map((company) => ({
+      company_name: company.company_name,
+      company_symbol: company.company_symbol,
+      latestQuote: latestQuotes.find(
+        (quote: CompanyQuote) => quote.company_id === company.company_id,
+      ),
+    }));
+
+  return companyWithLatestQuoteList;
+}
+
 export {
   getCompanyInfoAndTags,
   getListOfCompanyInfoAndTags,
   getAllCompanies,
   getAllCompanySymbols,
+  getAllTags,
+  getCompanyQuoteByTag,
 };

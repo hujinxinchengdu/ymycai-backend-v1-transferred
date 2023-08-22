@@ -16,6 +16,7 @@ export * from './db_tables/topic';
 export * from './db_tables/earnings-calendar';
 export * from './db_tables/company-quote';
 export * from './db_tables/insider-trading-transaction';
+export * from './db_tables/company-quote';
 
 export * from './requests/stocks';
 export * from './requests/news';

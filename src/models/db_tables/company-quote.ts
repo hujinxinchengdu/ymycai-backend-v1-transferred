@@ -79,6 +79,9 @@ class CompanyQuote {
   @Column({ type: 'bigint' })
   sharesOutstanding: number;
 
+  @Column({ type: 'varchar' })
+  company_id: string;
+
   @ManyToOne(() => Company, (company) => company.company_quote)
   @JoinColumn({ name: 'company_id' })
   company: Company;
