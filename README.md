@@ -36,7 +36,7 @@ Status codes:
 ```
 
 ## .env.example
-
+```
 PORT=Your Port
 
 HOST=Your Database Host
@@ -52,7 +52,7 @@ ISSUER=your-issuer-url
 AUDIENCE=your-audience
 SECRET=your-secret
 TOKEN_SIGNING_ALG=HS256
-
+```
 ## 请求的方法
 
 DataModel
