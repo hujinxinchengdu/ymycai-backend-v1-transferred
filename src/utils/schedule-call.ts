@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { saveMarketNewData } from '../controllers';
+import { saveMarketNewData, deleteOldCompanyQuoteData } from '../controllers';
 
 export function scheduleDailyCall() {
   try {
@@ -18,3 +18,6 @@ export function scheduleDailyCall() {
     throw error;
   }
 }
+
+// 计划删除老的公司行情数据的任务
+cron.schedule('0 3 * * *', deleteOldCompanyQuoteData);

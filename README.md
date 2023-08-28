@@ -35,6 +35,24 @@ Status codes:
 
 ```
 
+## .env.example
+
+PORT=Your Port
+
+HOST=Your Database Host
+DATABASE_PORT=Your Database Port
+DB_USER=Your Database Username
+PASSWORD=Your Database Password
+DATABASE=Your Database Name
+
+FINANCIAL_MODELING_KEY=API KEY
+FINANCIAL_API_BASE_URL=Base Url
+
+ISSUER=your-issuer-url
+AUDIENCE=your-audience
+SECRET=your-secret
+TOKEN_SIGNING_ALG=HS256
+
 ## 请求的方法
 
 DataModel
