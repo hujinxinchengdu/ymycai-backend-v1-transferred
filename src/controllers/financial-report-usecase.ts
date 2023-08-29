@@ -5,6 +5,7 @@ import {
 } from '../services';
 import { Company, FinancialReport, FinancialAnalysis } from '../models';
 import { Between, MoreThan, LessThan } from 'typeorm';
+import { IFinancialAnalysisModel } from '../models';
 
 async function saveAllFinancialReportInfoBySymbol(
   companySymbol: string,
@@ -181,8 +182,70 @@ async function getCompanyAllFinancialReport(
   }
 }
 
+async function getCompanyAllFinancialAnalyses(
+  companySymbol: string,
+  isQuarterly?: boolean,
+  from?: Date,
+  to?: Date,
+): Promise<IFinancialAnalysisModel[]> {
+  try {
+    // Fetch the company entity by its symbol
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+
+    // Check if the company exists
+    if (!company) {
+      throw new Error(`Company with symbol ${companySymbol} not found`);
+    }
+
+    let whereClause: any = { company_id: company.company_id };
+
+    // Check if isQuarterly is specified and add it to the where clause
+    if (isQuarterly !== undefined) {
+      const reportType = isQuarterly ? 'Quarterly' : 'Annual';
+      whereClause = {
+        ...whereClause,
+        type: reportType,
+      };
+    }
+
+    // Check if from and to dates are specified and add them to the where clause
+    if (from && to) {
+      whereClause = {
+        ...whereClause,
+        publish_time: Between(from, to),
+      };
+    } else if (from) {
+      whereClause = {
+        ...whereClause,
+        publish_time: MoreThan(from),
+      };
+    } else if (to) {
+      whereClause = {
+        ...whereClause,
+        publish_time: LessThan(to),
+      };
+    }
+
+    // Fetch the financial analyses based on the where clause
+    const financialAnalyses = await AppDataSource.manager.find(
+      FinancialAnalysis,
+      {
+        where: whereClause,
+        order: { publish_time: 'DESC' },
+      },
+    );
+
+    return financialAnalyses;
+  } catch (error) {
+    throw new Error(`Error fetching financial analyses: ${error.message}`);
+  }
+}
+
 export {
   saveAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
   getCompanyAllFinancialReport,
+  getCompanyAllFinancialAnalyses,
 };
