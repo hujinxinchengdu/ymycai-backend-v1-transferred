@@ -7,51 +7,51 @@ import { Company, FinancialReport, FinancialAnalysis } from '../models';
 import { Between, MoreThan, LessThan } from 'typeorm';
 import { IFinancialAnalysisModel } from '../models';
 
-async function saveAllFinancialReportInfoBySymbol(
-  companySymbol: string,
-  isQuarterly: boolean,
-): Promise<void> {
-  if (typeof isQuarterly !== 'boolean') {
-    throw new Error('The isQuarterly parameter must be a boolean.');
-  }
+// async function saveAllFinancialReportInfoBySymbol(
+//   companySymbol: string,
+//   isQuarterly: boolean,
+// ): Promise<void> {
+//   if (typeof isQuarterly !== 'boolean') {
+//     throw new Error('The isQuarterly parameter must be a boolean.');
+//   }
 
-  try {
-    const company = await AppDataSource.manager.findOne(Company, {
-      where: { company_symbol: companySymbol },
-    });
+//   try {
+//     const company = await AppDataSource.manager.findOne(Company, {
+//       where: { company_symbol: companySymbol },
+//     });
 
-    if (!company) {
-      throw new Error(`Company with symbol ${companySymbol} not found`);
-    }
+//     if (!company) {
+//       throw new Error(`Company with symbol ${companySymbol} not found`);
+//     }
 
-    const financialReports = await getFinancialReportData(
-      companySymbol,
-      isQuarterly,
-      company.company_id,
-    );
+//     const financialReports = await getFinancialReportData(
+//       companySymbol,
+//       isQuarterly,
+//       company.company_id,
+//     );
 
-    for (const report of financialReports) {
-      const existingReport = await AppDataSource.manager.findOne(
-        FinancialReport,
-        {
-          where: {
-            publish_time: report.publish_time,
-            company_id: report.company_id,
-          },
-        },
-      );
+//     for (const report of financialReports) {
+//       const existingReport = await AppDataSource.manager.findOne(
+//         FinancialReport,
+//         {
+//           where: {
+//             publish_time: report.publish_time,
+//             company_id: report.company_id,
+//           },
+//         },
+//       );
 
-      console.log('start saving');
+//       console.log('start saving');
 
-      if (!existingReport) {
-        await AppDataSource.manager.save(report);
-      }
-    }
-    console.log('finish');
-  } catch (error) {
-    throw new Error(`Error while fetching company: ${error.message}`);
-  }
-}
+//       if (!existingReport) {
+//         await AppDataSource.manager.save(report);
+//       }
+//     }
+//     console.log('finish');
+//   } catch (error) {
+//     throw new Error(`Error while fetching company: ${error.message}`);
+//   }
+// }
 
 async function updateFinancialReportInfoBySymbol(
   companySymbol: string,
@@ -243,9 +243,44 @@ async function getCompanyAllFinancialAnalyses(
   }
 }
 
+async function getAllCompanies(): Promise<Company[]> {
+  return await AppDataSource.manager.find(Company);
+}
+
+async function updateAllCompaniesFinancialReportsInBatches(): Promise<void> {
+  try {
+    // 获取所有公司
+    const allCompanies = await getAllCompanies();
+
+    const BATCH_SIZE = 10; // 可以根据需要调整这个数值
+
+    for (let i = 0; i < allCompanies.length; i += BATCH_SIZE) {
+      const companyBatch = allCompanies.slice(i, i + BATCH_SIZE);
+
+      // 使用 Promise.all 来并发更新这一批公司的财报
+      await Promise.all(
+        companyBatch.map(async (company) => {
+          await updateFinancialReportInfoBySymbol(
+            company.company_symbol,
+            false,
+          );
+          await updateFinancialReportInfoBySymbol(company.company_symbol, true);
+        }),
+      );
+    }
+
+    console.log("Finished updating all companies' financial reports.");
+  } catch (error) {
+    console.log(
+      `Error while updating all companies\' financial reports: ${error.message}`,
+    );
+  }
+}
+
 export {
-  saveAllFinancialReportInfoBySymbol,
+  // saveAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
   getCompanyAllFinancialReport,
   getCompanyAllFinancialAnalyses,
+  updateAllCompaniesFinancialReportsInBatches,
 };
