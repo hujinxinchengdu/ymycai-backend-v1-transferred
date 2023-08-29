@@ -1,33 +1,36 @@
-import { In } from 'typeorm';
+import { DeepPartial, In, LessThan } from 'typeorm';
+import moment from 'moment-timezone';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
 import { getAllCompanies } from './company-infomation-usecase';
 import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
+import { chunkPromises } from '../utils';
+
+const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to process at once
 
 async function saveMarketNewData(): Promise<void> {
   try {
     const companies = await getAllCompanies();
 
-    let allMarketData: MarketData[] = [];
+    // Map each company to a function that, when called, fetches market data
+    const marketDataPromiseFactories = companies.map((company) => {
+      return () => getMarketNewData(company.company_id, company.company_symbol);
+    });
 
-    for (const company of companies) {
-      const companySymbol = company.company_symbol;
-      const companyMarketData = await getMarketNewData(
-        company.company_id,
-        companySymbol,
-      );
-      allMarketData = allMarketData.concat(companyMarketData);
-    }
+    // Fetch company quote data in chunks
+    const allMarketData = await chunkPromises(
+      marketDataPromiseFactories,
+      CONCURRENCY_LIMIT,
+    );
 
-    const BATCH_SIZE = 500; // 可根据需要调整这个值
+    const BATCH_SIZE = 500; // Adjust this value if needed
 
+    // Batch save the market data to the database
     for (let i = 0; i < allMarketData.length; i += BATCH_SIZE) {
       const batch = allMarketData.slice(i, i + BATCH_SIZE);
-      await AppDataSource.manager.save(MarketData, batch);
+      await AppDataSource.manager.save(MarketData, batch.flat());
     }
-
-    return;
   } catch (error) {
     throw error;
   }
@@ -127,31 +130,58 @@ async function saveCompanyQuoteDataByCompanySymbolList(
   companySymbols: string[],
 ): Promise<void> {
   try {
-    const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
+    // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
 
-    for (let companyQuoteData of companyQuoteDatas) {
-      // 首先，查找与市场数据中的公司股票符号相对应的公司
-      const company = await AppDataSource.manager.findOne(Company, {
-        where: { company_symbol: companyQuoteData.symbol },
+    // Convert companySymbols into an array of functions returning promises
+    const promiseFunctions = companySymbols.map(
+      (symbol) => async () => await getCompanyQuoteData([symbol]),
+    );
+
+    // Fetch company quote data in chunks
+    const allCompanyQuoteDatas = await chunkPromises(
+      promiseFunctions,
+      CONCURRENCY_LIMIT,
+    );
+
+    const companyQuoteDatas = allCompanyQuoteDatas.flat();
+
+    const chunkSize = 500;
+    for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
+      const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+
+      // 获取当前块的所有公司股票符号
+      const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+
+      // 为这些符号一次性查找所有公司
+      const companies = await AppDataSource.manager.find(Company, {
+        where: { company_symbol: In(currentChunkSymbols) },
       });
 
-      // 如果找不到公司，则继续下一次迭代
-      if (!company) {
-        console.error(
-          `Company with symbol ${companyQuoteData.symbol} not found`,
-        );
-        continue;
+      // 创建一个映射来快速查找公司
+      const companyMap = new Map(
+        companies.map((company) => [company.company_symbol, company]),
+      );
+
+      const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
+
+      currentChunk.forEach((companyQuoteData) => {
+        const company = companyMap.get(companyQuoteData.symbol);
+        if (!company) {
+          console.error(
+            `Company with symbol ${companyQuoteData.symbol} not found`,
+          );
+        } else {
+          toBeSaved.push({
+            ...companyQuoteData,
+            company_id: company.company_id,
+          });
+        }
+      });
+
+      // Using TypeORM's save method to batch save or update market data
+      if (toBeSaved.length > 0) {
+        await AppDataSource.manager.save(CompanyQuote, toBeSaved);
       }
-
-      companyQuoteData = {
-        ...companyQuoteData,
-        company_id: company.company_id,
-      };
-
-      // 使用 TypeORM 的 save 方法保存或更新市场数据。
-      // 如果市场数据已经存在，则根据主键进行更新。
-      // 否则，将插入新记录。
-      await AppDataSource.manager.save(CompanyQuote, companyQuoteData);
     }
 
     console.log('Company Quote data save operation finished');
@@ -159,6 +189,29 @@ async function saveCompanyQuoteDataByCompanySymbolList(
     throw new Error(
       `Error while updating Company Quote data: ${error.message}`,
     );
+  }
+}
+
+async function updateAllCompanyQuoteData(): Promise<void> {
+  const currentTimeET = moment().tz('America/New_York');
+
+  // Check if current time is between 9:30 am and 2:00 pm
+  if (
+    currentTimeET.isBetween(
+      moment().tz('America/New_York').hour(9).minute(30),
+      moment().tz('America/New_York').hour(14).minute(0),
+    )
+  ) {
+    try {
+      const companies = await getAllCompanies();
+      const companySymbols = companies.map((company) => company.company_symbol);
+      await saveCompanyQuoteDataByCompanySymbolList(companySymbols);
+      console.log('Company Quote data updated successfully');
+    } catch (error) {
+      console.error('Error updating Company Quote data:', error);
+    }
+  } else {
+    console.log('Outside of market hours. Not fetching data.');
   }
 }
 
@@ -178,6 +231,22 @@ async function getCompanyQuoteDataByCompanySymbolList(
   }
 }
 
+// 定义一个函数来删除两周前的company quote data
+async function deleteOldCompanyQuoteData(): Promise<void> {
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  try {
+    await AppDataSource.manager.delete(CompanyQuote, {
+      record_time: LessThan(twoWeeksAgo),
+    });
+
+    console.log('Old Company Quote data has been deleted successfully');
+  } catch (error) {
+    console.error('Error deleting old Company Quote data:', error);
+  }
+}
+
 export {
   getLastMarketDataForServices,
   saveMarketNewData,
@@ -186,4 +255,6 @@ export {
   getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
   getCompanyQuoteDataByCompanySymbolList,
+  deleteOldCompanyQuoteData,
+  updateAllCompanyQuoteData,
 };

@@ -18,6 +18,12 @@ class User {
   @Column({ type: 'varchar' })
   email: string;
 
+  @Column({ type: 'varchar' })
+  emailVerified: boolean;
+
+  @Column({ type: 'varchar' })
+  auth0Id: string;
+
   @Column({ type: 'timestamp' })
   signup_time: Date;
 

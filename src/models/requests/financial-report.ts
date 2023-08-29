@@ -44,4 +44,15 @@ export interface FinancialAnalysisMetrics {
   undistributedEPS: number;
   cashFlowPerShare: number;
   netProfitMargin: number;
+  GrossProfit: number;
+  GrossMarginRatio: number;
+}
+
+export interface IFinancialAnalysisModel {
+  fin_analyze_id: string;
+  analyses_data: any; // Replace 'any' with a more specific type if applicable
+  company_id: string;
+  type: string; // You can make this a union type if it can only be 'Annual' or 'Quarterly'
+  publish_time: Date;
+  update_time: Date;
 }

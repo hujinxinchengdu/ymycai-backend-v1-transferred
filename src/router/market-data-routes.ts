@@ -18,11 +18,21 @@ const router = express.Router();
 
 /**
  * @route PUT /api/market_data/company_quote
- * @description
+ * @description Update the market data for the provided company symbols.
  *
- * @param {}
+ * @param {symbolList: string[]} req.body - An array containing the company symbols for which the market data should be updated.
  *
- * @returns {}
+ * @returns {Object} An object containing a success message or an error message.
+ *
+ * Example Success Response:
+ * {
+ *   message: "Successfully updated market data for AAPL, GOOGL, MSFT"
+ * }
+ *
+ * Example Error Response:
+ * {
+ *   error: "No company symbols provided"
+ * }
  */
 router.put(
   '/company_quote',
@@ -63,7 +73,7 @@ router.put(
       console.log('success');
       return res
         .status(200)
-        .json({ message: `Successfully updated all market data` });
+        .json({ status: 200, message: `Successfully updated all market data` });
     } catch (error) {
       return next(error);
     }

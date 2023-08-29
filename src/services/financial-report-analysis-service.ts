@@ -37,6 +37,8 @@ function calculateFinancialIndicators(
   const retainedEarnings = f.balancesheet.retainedEarnings;
   const freeCashFlow = f.cashflow.freeCashFlow;
   const weightedAverageShsOut = f.income_statement.weightedAverageShsOut;
+  const costOfGoodsSold = f.income_statement.costOfGoodsSold;
+  const grossProfit = GrossProfit(revenue, costOfGoodsSold);
 
   return {
     ROE: ROE(netIncome, totalStockholdersEquity),
@@ -54,6 +56,8 @@ function calculateFinancialIndicators(
     undistributedEPS: UndistributedEPS(retainedEarnings, weightedAverageShsOut),
     cashFlowPerShare: CashFlowPerShare(freeCashFlow, weightedAverageShsOut),
     netProfitMargin: NetProfitMargin(netIncome, revenue),
+    GrossProfit: grossProfit,
+    GrossMarginRatio: GrossMarginRatio(grossProfit, revenue),
   };
 }
 
@@ -125,6 +129,16 @@ function CashFlowPerShare(
 // 净利润率 (Net Profit Margin)
 function NetProfitMargin(netIncome: number, revenue: number): number {
   return netIncome / revenue;
+}
+
+// 毛利润 (Gross Profit)
+function GrossProfit(revenue: number, costOfGoodsSold: number): number {
+  return revenue - costOfGoodsSold;
+}
+
+// 毛利率 (Gross Margin Ratio)
+function GrossMarginRatio(grossProfit: number, revenue: number): number {
+  return grossProfit / revenue;
 }
 
 export { formFinancialReportAnalysis };
