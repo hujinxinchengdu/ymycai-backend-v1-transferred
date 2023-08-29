@@ -4,10 +4,11 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import {
-  saveAllFinancialReportInfoBySymbol,
+  // saveAllFinancialReportInfoBySymbol,
   updateFinancialReportInfoBySymbol,
   getCompanyAllFinancialReport,
   getCompanyAllFinancialAnalyses,
+  updateAllCompaniesFinancialReportsInBatches,
 } from '../controllers';
 import {
   PostFinancialReportResponseModel,
@@ -18,37 +19,37 @@ import {
 
 const router = express.Router();
 
-/**
- * @route POST /api/financial_reports/:companySymbol
- * @description
- *
- * @param {}
- *
- * @returns {PostFinancialReportResponseModel}
- */
-router.post(
-  '/:companySymbol',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const companySymbol = req.params.companySymbol;
-      const isQuarterly = req.body.isQuarterly;
+// /**
+//  * @route POST /api/financial_reports/:companySymbol
+//  * @description
+//  *
+//  * @param {}
+//  *
+//  * @returns {PostFinancialReportResponseModel}
+//  */
+// router.post(
+//   '/:companySymbol',
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const companySymbol = req.params.companySymbol;
+//       const isQuarterly = req.body.isQuarterly;
 
-      if (typeof isQuarterly !== 'boolean') {
-        return res
-          .status(400)
-          .json({ error: 'isQuarterly must be a boolean value.' });
-      }
+//       if (typeof isQuarterly !== 'boolean') {
+//         return res
+//           .status(400)
+//           .json({ error: 'isQuarterly must be a boolean value.' });
+//       }
 
-      await saveAllFinancialReportInfoBySymbol(companySymbol, isQuarterly);
+//       await saveAllFinancialReportInfoBySymbol(companySymbol, isQuarterly);
 
-      return res.status(200).json({
-        message: `Successfully fetched financial reports for ${companySymbol}`,
-      } as unknown as PostFinancialReportResponseModel);
-    } catch (error) {
-      return next(error);
-    }
-  },
-);
+//       return res.status(200).json({
+//         message: `Successfully fetched financial reports for ${companySymbol}`,
+//       } as unknown as PostFinancialReportResponseModel);
+//     } catch (error) {
+//       return next(error);
+//     }
+//   },
+// );
 
 /**
  * @route PUT /api/financial_reports/:companySymbol
@@ -169,6 +170,30 @@ router.get(
         status: 200,
         message: `Successfully got financial analysis data for ${companySymbol}`,
         data: financialAnalysis,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route POST /api/financial_reports/update_all
+ * @description Batch update financial reports for all companies, both annual and quarterly.
+ *
+ * @returns {Object} Status message indicating whether the update was successful.
+ */
+router.post(
+  '/update_all',
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      // 此处可以添加权限检查逻辑，以确保只有授权用户可以更新所有财报
+
+      await updateAllCompaniesFinancialReportsInBatches();
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Successfully updated financial reports for all companies.',
       });
     } catch (error) {
       return next(error);
