@@ -26,7 +26,6 @@ async function saveMarketNewData(): Promise<void> {
       const batch = allMarketData.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(MarketData, batch);
     }
-
     return;
   } catch (error) {
     throw error;
