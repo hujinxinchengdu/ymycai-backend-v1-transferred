@@ -1,6 +1,7 @@
 import { AppDataSource } from '../configuration';
 import { SelectQueryBuilder } from 'typeorm';
-import { Company, Tag, CompanyQuote } from '../models';
+import { Company, Tag, CompanyQuote, PeerStock } from '../models';
+import { getPeerStockData } from '../services';
 
 interface TagInfoModel {
   tag_id: string;
@@ -164,6 +165,81 @@ async function getCompanyQuoteByTag(
     }));
 
   return companyWithLatestQuoteList;
+}
+
+export async function getAllPeerStocks(): Promise<void> {
+  try {
+    // 获取所有公司
+    const allCompanies = await getAllCompanies();
+
+    // 获取数据库管理器
+    const manager = AppDataSource.manager;
+
+    for (const company of allCompanies) {
+      // 检查该公司是否已有PeerStock数据
+      const existingPeerStock = await manager.findOne(PeerStock, {
+        where: { company_symbol: company.company_symbol },
+      });
+
+      // 如果该公司已有PeerStock数据，则跳过
+      if (existingPeerStock) {
+        continue;
+      }
+
+      // 获取该公司的PeerStock数据
+      const newPeerStock = await getPeerStockData(company.company_symbol);
+
+      // 保存新的PeerStock数据到数据库
+      await manager.save(PeerStock, newPeerStock);
+    }
+  } catch (error) {
+    console.log(error);
+    console.error('Error fetching or saving peer stock data:', error.message);
+  }
+}
+
+export async function getPeerStockByCompanySymbol(
+  companySymbol: string,
+): Promise<PeerStock | null> {
+  try {
+    console.log('start =================================peer');
+    // 获取数据库管理器
+    const manager = AppDataSource.manager;
+
+    // 检查该公司是否存在
+    const company = await manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+
+    // 如果该公司不存在，则返回null或抛出一个错误
+    if (!company) {
+      throw new Error('Company not found');
+    }
+
+    // 检查该公司是否已有PeerStock数据
+    const existingPeerStock = await manager.findOne(PeerStock, {
+      where: { company_symbol: companySymbol },
+    });
+
+    // 如果该公司已有PeerStock数据，则返回它
+    if (existingPeerStock) {
+      return existingPeerStock;
+    }
+    console.log('new company =================================peer');
+
+    // 如果该公司尚未有PeerStock数据，则获取并保存
+    const newPeerStock = await getPeerStockData(companySymbol);
+
+    // 保存新的PeerStock数据到数据库
+    await manager.save(PeerStock, newPeerStock);
+    console.log('finish =================================peer');
+
+    return newPeerStock;
+  } catch (error) {
+    console.log(error);
+    console.error('Error fetching or saving peer stock data:', error.message);
+    throw error;
+  }
 }
 
 async function findCompanyBySymbol(symbol: string): Promise<Company | null> {

@@ -7,6 +7,7 @@ import {
   JoinTable,
   PrimaryColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import {
   Tag,
@@ -21,6 +22,7 @@ import {
   EarningsCalendar,
   CompanyQuote,
   InsiderTradingTransaction,
+  PeerStock,
 } from '..';
 
 @Entity('companies')
@@ -122,6 +124,9 @@ class Company {
     (insiderTradingTransaction) => insiderTradingTransaction.company,
   )
   insiderTradingTransaction: InsiderTradingTransaction[];
+
+  @OneToOne(() => PeerStock, (peerStock) => peerStock.company)
+  peerStock: PeerStock;
 }
 
 export { Company };
