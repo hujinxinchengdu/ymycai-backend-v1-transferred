@@ -1,6 +1,7 @@
 import { AppDataSource } from '../configuration';
 import { SelectQueryBuilder } from 'typeorm';
 import { Company, Tag, CompanyQuote } from '../models';
+import { v4 as uuidv4 } from 'uuid';
 
 interface TagInfoModel {
   tag_id: string;
@@ -178,6 +179,32 @@ async function findCompanyBySymbol(symbol: string): Promise<Company | null> {
   }
 }
 
+async function createCompany(
+  symbol: string,
+  company_name: string,
+): Promise<Company | null> {
+  try {
+    const company = new Company();
+    company.company_id = uuidv4(); // 生成一个UUID作为公司ID
+    company.company_name = company_name;
+    company.company_symbol = symbol;
+    company.company_industry = 'N/A'; // 设置默认行业
+    company.company_information = 'N/A'; // 设置默认信息
+    company.industry_position = 'N/A'; // 设置默认行业位置
+    company.established_time = new Date(); // 使用当前时间作为成立时间
+    company.info_create_time = new Date(); // 使用当前时间作为创建时间
+    company.info_update_time = new Date(); // 使用当前时间作为更新时间
+    company.earnings_announcement = new Date();
+
+    const savedCompany = await AppDataSource.manager.save(Company, company); // 保存实例
+
+    return savedCompany;
+  } catch (error) {
+    console.error('Error creating company:', error.message);
+    return null;
+  }
+}
+
 export {
   getCompanyInfoAndTags,
   getListOfCompanyInfoAndTags,
@@ -186,4 +213,5 @@ export {
   getAllTags,
   getCompanyQuoteByTag,
   findCompanyBySymbol,
+  createCompany,
 };

@@ -10,6 +10,7 @@ import {
   getAllCompanySymbols,
   getAllTags,
   getCompanyQuoteByTag,
+  createCompany,
 } from '../controllers';
 import {
   GetCompanyInfoResponseModel,
@@ -151,6 +152,26 @@ router.get(
           tag_id,
         )) as unknown as GetCompaniesWithQuotesByTag;
       return res.status(200).json(companiesWithQuotes);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route POST /api/companies/create_company
+ * @description 创建新的公司
+ *
+ * @returns {company} 新的公司, 里面字段有company_name 和 symbol, 其他都是默认值
+ */
+router.post(
+  '/create_company',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const symbol = req.body.symbol as string;
+      const comapany_name = req.body.company_name as string;
+      const company = createCompany(symbol, comapany_name);
+      return res.status(200).json(company);
     } catch (error) {
       return next(error);
     }
