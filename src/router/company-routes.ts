@@ -10,6 +10,8 @@ import {
   getAllCompanySymbols,
   getAllTags,
   getCompanyQuoteByTag,
+  getAllPeerStocks,
+  getPeerStockByCompanySymbol,
 } from '../controllers';
 import {
   GetCompanyInfoResponseModel,
@@ -151,6 +153,59 @@ router.get(
           tag_id,
         )) as unknown as GetCompaniesWithQuotesByTag;
       return res.status(200).json(companiesWithQuotes);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/companies/peerstocks
+ * @description 获取所有公司的PeerStock数据
+ *
+ * @returns {void}
+ */
+router.post(
+  '/peerstocks',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await getAllPeerStocks();
+      return res.status(200).json({
+        status: 200,
+        message: 'PeerStock data for all companies fetched successfully.',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/companies/peerstocks/:companySymbol
+ * @description 通过公司的Symbol获取该公司的PeerStock数据
+ *
+ * @param {string} companySymbol 公司symbol
+ *
+ * @returns {PeerStock} PeerStock数据
+ */
+router.get(
+  '/peerstocks/:companySymbol',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const companySymbol = req.params.companySymbol;
+      const peerStockData = await getPeerStockByCompanySymbol(companySymbol);
+
+      if (peerStockData === null) {
+        return res.status(404).json({
+          message: `PeerStock data for company symbol ${companySymbol} not found.`,
+        });
+      }
+
+      return res.status(200).json({
+        status: 200,
+        message: 'PeerStock data for company symbol ${companySymbol} found.',
+        data: peerStockData,
+      });
     } catch (error) {
       return next(error);
     }

@@ -20,6 +20,7 @@ import {
   EarningsCalendar,
   CompanyQuote,
   InsiderTradingTransaction,
+  PeerStock,
 } from '../models';
 
 import * as fs from 'fs';
@@ -68,6 +69,7 @@ export const AppDataSource = new DataSource({
     EarningsCalendar,
     CompanyQuote,
     InsiderTradingTransaction,
+    PeerStock,
   ],
 
   synchronize: false,
