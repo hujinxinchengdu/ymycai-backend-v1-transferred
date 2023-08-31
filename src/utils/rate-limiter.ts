@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const requestQueue: (() => Promise<void>)[] = [];
-const REQUESTS_PER_MINUTE = 750;
+const REQUESTS_PER_MINUTE = 500;
 const REQUEST_INTERVAL = 60000 / REQUESTS_PER_MINUTE;
 
 setInterval(async () => {

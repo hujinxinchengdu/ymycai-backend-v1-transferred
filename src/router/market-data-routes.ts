@@ -10,7 +10,8 @@ import {
   getDayBeforeLatestMarketData,
   getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
-  getCompanyQuoteDataByCompanySymbolList,
+  updateAllCompanyQuoteData,
+  getLatestCompanyQuoteDataByCompanySymbolList,
 } from '../controllers';
 import { scheduleDailyCall } from '../utils/schedule-call';
 
@@ -176,13 +177,37 @@ router.post(
   '/company_quote',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const companyQuotes = await updateAllCompanyQuoteData();
+
+      return res.status(200).json({
+        message: `Successfully fetched market data}`,
+        data: companyQuotes,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route POST /api/market_data/company_quote
+ * @description 根据symbol获取公司的company_quote市场报价数据
+ *
+ * @param {GetMultiCompanyInfosReqBodyModel} req.body 想要的公司symbol列表
+ *
+ * @returns {}
+ */
+router.post(
+  '/company_quote_last',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
       const symbolList: string[] = req.body.symbolList;
 
       if (!symbolList || symbolList.length === 0) {
         return res.status(400).json({ error: 'No company symbols provided' });
       }
 
-      const companyQuotes = await getCompanyQuoteDataByCompanySymbolList(
+      const companyQuotes = await getLatestCompanyQuoteDataByCompanySymbolList(
         symbolList,
       );
 

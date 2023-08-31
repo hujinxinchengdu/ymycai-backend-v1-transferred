@@ -1,7 +1,9 @@
 import { AppDataSource } from '../configuration';
-import { SelectQueryBuilder } from 'typeorm';
-import { Company, Tag, CompanyQuote } from '../models';
 import { v4 as uuidv4 } from 'uuid';
+import { SelectQueryBuilder, In } from 'typeorm';
+import { Company, Tag, CompanyQuote, PeerStock } from '../models';
+import { getPeerStockData } from '../services';
+import { getLatestCompanyQuoteDataByCompanySymbolList } from './market-data-usecase';
 
 interface TagInfoModel {
   tag_id: string;
@@ -60,30 +62,22 @@ async function getListOfCompanyInfoAndTags(
   companyList: string[],
 ): Promise<CompanyInfoListModel> {
   try {
-    const companiesInfo = await Promise.all(
-      companyList.map(async (companySymbol) => {
-        const company = await AppDataSource.manager.findOne(Company, {
-          where: { company_symbol: companySymbol },
-          relations: ['tags'],
-        });
+    const companies = await AppDataSource.manager.find(Company, {
+      where: { company_symbol: In(companyList) }, // Use In() operator to match multiple values
+      relations: ['tags'],
+    });
 
-        if (!company) {
-          throw new Error(`Company with symbol ${companySymbol} not found`);
-        }
-
-        return {
-          company_name: company.company_name,
-          company_symbol: company.company_symbol,
-          company_information: company.company_information,
-          industry_position: company.industry_position,
-          tags: company.tags.map((tag) => ({
-            tag_id: tag.tag_id,
-            tag_cn: tag.tag_cn,
-            tag_en: tag.tag_en,
-          })),
-        };
-      }),
-    );
+    const companiesInfo = companies.map((company) => ({
+      company_name: company.company_name,
+      company_symbol: company.company_symbol,
+      company_information: company.company_information,
+      industry_position: company.industry_position,
+      tags: company.tags.map((tag) => ({
+        tag_id: tag.tag_id,
+        tag_cn: tag.tag_cn,
+        tag_en: tag.tag_en,
+      })),
+    }));
 
     return { companies: companiesInfo };
   } catch (error) {
@@ -167,6 +161,89 @@ async function getCompanyQuoteByTag(
   return companyWithLatestQuoteList;
 }
 
+export async function getAllPeerStocks(): Promise<void> {
+  try {
+    // 获取所有公司
+    const allCompanies = await getAllCompanies();
+
+    // 获取数据库管理器
+    const manager = AppDataSource.manager;
+
+    // 收集所有需要新的PeerStock数据的公司符号
+    const companiesToFetch = allCompanies
+      .filter((company) => !company.peerStock) // Assuming the peerStock property indicates existing data
+      .map((company) => company.company_symbol);
+
+    // 获取需要新的PeerStock数据的公司的PeerStock数据
+    const newPeerStocks = await getPeerStockDataForSymbols(companiesToFetch);
+
+    // 保存新的PeerStock数据到数据库
+    await manager.save(PeerStock, newPeerStocks);
+  } catch (error) {
+    console.log(error);
+    console.error('Error fetching or saving peer stock data:', error.message);
+  }
+}
+
+async function getPeerStockDataForSymbols(
+  companySymbols: string[],
+): Promise<PeerStock[]> {
+  const peerStocks: PeerStock[] = [];
+
+  // Use a batch size to limit the number of symbols fetched at once
+  const batchSize = 100; // Adjust as needed
+  for (let i = 0; i < companySymbols.length; i += batchSize) {
+    const symbolsBatch = companySymbols.slice(i, i + batchSize);
+    const batchPeerStocks = await Promise.all(
+      symbolsBatch.map(async (symbol) => await getPeerStockData(symbol)),
+    );
+    peerStocks.push(...batchPeerStocks);
+  }
+
+  return peerStocks;
+}
+
+export async function getPeerStockByCompanySymbol(
+  companySymbol: string,
+): Promise<PeerStock | null> {
+  try {
+    // 获取数据库管理器
+    const manager = AppDataSource.manager;
+
+    // 检查该公司是否存在
+    const company = await manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+
+    // 如果该公司不存在，则返回null或抛出一个错误
+    if (!company) {
+      throw new Error('Company not found');
+    }
+
+    // 检查该公司是否已有PeerStock数据
+    const existingPeerStock = await manager.findOne(PeerStock, {
+      where: { company_symbol: companySymbol },
+    });
+
+    // 如果该公司已有PeerStock数据，则返回它
+    if (existingPeerStock) {
+      return existingPeerStock;
+    }
+
+    // 如果该公司尚未有PeerStock数据，则获取并保存
+    const newPeerStock = await getPeerStockData(companySymbol);
+
+    // 保存新的PeerStock数据到数据库
+    await manager.save(PeerStock, newPeerStock);
+
+    return newPeerStock;
+  } catch (error) {
+    console.log(error);
+    console.error('Error fetching or saving peer stock data:', error.message);
+    throw error;
+  }
+}
+
 async function findCompanyBySymbol(symbol: string): Promise<Company | null> {
   try {
     const company = await AppDataSource.manager.findOne(Company, {
@@ -202,6 +279,44 @@ async function createCompany(
   } catch (error) {
     console.error('Error creating company:', error.message);
     return null;
+  }
+}
+export async function getCompanyAndPeerLatestQuotes(
+  companySymbol: string,
+): Promise<{
+  companyInfo: CompanyInfoModel;
+  peerStock: PeerStock | null;
+  latestQuotes: CompanyQuote[];
+}> {
+  try {
+    // 获取目标公司的信息
+    const companyInfo = await getCompanyInfoAndTags(companySymbol);
+
+    // 获取Peer公司的信息
+    const peerStock = await getPeerStockByCompanySymbol(companySymbol);
+
+    // 创建一个包含目标公司和所有Peer公司的symbol数组
+    const allSymbols: string[] = [companySymbol];
+
+    if (peerStock) {
+      allSymbols.push(...peerStock.peer_symbols); // 假设peer_symbols是PeerStock类型里的一个属性，包含了Peer公司的symbol列表
+    }
+
+    // 获取所有相关公司的最新报价
+    const latestQuotes = await getLatestCompanyQuoteDataByCompanySymbolList(
+      allSymbols,
+    );
+
+    return {
+      companyInfo,
+      peerStock,
+      latestQuotes,
+    };
+  } catch (error) {
+    console.error(
+      `Error fetching company and peer latest quotes: ${error.message}`,
+    );
+    throw error;
   }
 }
 
