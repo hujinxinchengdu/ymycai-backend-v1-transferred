@@ -2,6 +2,7 @@ import { AppDataSource } from '../configuration';
 import { SelectQueryBuilder, In } from 'typeorm';
 import { Company, Tag, CompanyQuote, PeerStock } from '../models';
 import { getPeerStockData } from '../services';
+import { getLatestCompanyQuoteDataByCompanySymbolList } from './market-data-usecase';
 
 interface TagInfoModel {
   tag_id: string;
@@ -251,6 +252,45 @@ async function findCompanyBySymbol(symbol: string): Promise<Company | null> {
   } catch (error) {
     console.error('Error fetching company:', error.message);
     return null;
+  }
+}
+
+export async function getCompanyAndPeerLatestQuotes(
+  companySymbol: string,
+): Promise<{
+  companyInfo: CompanyInfoModel;
+  peerStock: PeerStock | null;
+  latestQuotes: CompanyQuote[];
+}> {
+  try {
+    // 获取目标公司的信息
+    const companyInfo = await getCompanyInfoAndTags(companySymbol);
+
+    // 获取Peer公司的信息
+    const peerStock = await getPeerStockByCompanySymbol(companySymbol);
+
+    // 创建一个包含目标公司和所有Peer公司的symbol数组
+    const allSymbols: string[] = [companySymbol];
+
+    if (peerStock) {
+      allSymbols.push(...peerStock.peer_symbols); // 假设peer_symbols是PeerStock类型里的一个属性，包含了Peer公司的symbol列表
+    }
+
+    // 获取所有相关公司的最新报价
+    const latestQuotes = await getLatestCompanyQuoteDataByCompanySymbolList(
+      allSymbols,
+    );
+
+    return {
+      companyInfo,
+      peerStock,
+      latestQuotes,
+    };
+  } catch (error) {
+    console.error(
+      `Error fetching company and peer latest quotes: ${error.message}`,
+    );
+    throw error;
   }
 }
 

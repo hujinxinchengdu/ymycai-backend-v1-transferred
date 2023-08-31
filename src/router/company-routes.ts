@@ -12,6 +12,7 @@ import {
   getCompanyQuoteByTag,
   getAllPeerStocks,
   getPeerStockByCompanySymbol,
+  getCompanyAndPeerLatestQuotes,
 } from '../controllers';
 import {
   GetCompanyInfoResponseModel,
@@ -42,6 +43,29 @@ router.get(
         (await getCompanyInfoAndTags(
           companySymbol,
         )) as unknown as GetCompanyInfoResponseModel;
+
+      return res.status(200).json(companyInfo);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/companies/company_and_peer_quote/:companySymbol
+ * @description 通过公司的Symbol获取单个公司和其Peer列表上公司的最新报价信息
+ *
+ * @param {string} companySymbol 公司symbol
+ *
+ * @returns {object} 包含该公司和其Peer列表上公司的最新报价信息的对象
+ */
+router.get(
+  '/company_and_peer_quote/:companySymbol',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const companySymbol = req.params.companySymbol;
+
+      const companyInfo = await getCompanyAndPeerLatestQuotes(companySymbol);
 
       return res.status(200).json(companyInfo);
     } catch (error) {
