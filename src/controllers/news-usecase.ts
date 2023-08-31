@@ -26,7 +26,11 @@ async function saveNews(newsData: Partial<News>): Promise<News> {
 
 async function findNews(): Promise<News[]> {
   try {
-    const savedNews = await AppDataSource.manager.find(News);
+    const savedNews = await AppDataSource.manager.find(News, {
+      order: {
+        published_time: 'DESC', // Assuming "created_at" is the timestamp field
+      },
+    });
     return savedNews;
   } catch (error) {
     throw new Error(`Error while fetching new: ${error.message}`);
@@ -34,7 +38,7 @@ async function findNews(): Promise<News[]> {
 }
 
 async function findNewsByTopic(
-  topicName: String,
+  topicName: string,
   page: number,
   pageSize: number,
 ): Promise<News[]> {
@@ -47,6 +51,7 @@ async function findNewsByTopic(
       .innerJoin('topics_to_news', 'tn', 'tn.news_id = news.news_id')
       .innerJoin('topics', 't', 'tn.topic_id = t.topic_id')
       .where('t.name = :topicName', { topicName })
+      .orderBy('news.published_time', 'DESC') // 按时间从后到前排序
       .skip(skip) // 使用.skip()方法跳过记录
       .take(pageSize) // 使用.take()方法限制返回的记录数
       .getMany();
@@ -89,6 +94,7 @@ async function findNewsByCompany(
       .innerJoin('news_to_companies', 'cn', 'cn.news_id = news.news_id')
       .innerJoin('companies', 'c', 'cn.company_id = c.company_id')
       .where('c.company_symbol = :ticker', { ticker })
+      .orderBy('news.published_time', 'DESC') // 按时间从后到前排序
       .skip(skip) // 使用.skip()方法跳过记录
       .take(pageSize) // 使用.take()方法限制返回的记录数
       .getMany();
