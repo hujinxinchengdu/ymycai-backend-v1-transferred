@@ -3,6 +3,7 @@
 创建docker容器, 并且运行docker容器,并设置文件关联方法
 端口: 主机端口:docker端口
 分别执行下面的两个命令.
+
 ```
 docker build .
 docker run -p 8000:8000 --name APP_NAME -v MY_PATH:/app  <image-id>
@@ -17,6 +18,7 @@ npm run start:cloud_dev / local_dev / local_product / product / dev / dev
 # API Example
 
 API文档例子
+
 ```
 POST /photo
 
@@ -42,7 +44,8 @@ Status codes:
 ```
 
 ## .env.example
-```
+
+```ini
 PORT=Your Port
 
 HOST=Your Database Host
@@ -59,9 +62,11 @@ AUDIENCE=your-audience
 SECRET=your-secret
 TOKEN_SIGNING_ALG=HS256
 ```
+
 ## 请求的方法
 
 DataModel
+
 ```ts
 // 在前端定义的 Photo 接口
 interface Photo {
@@ -91,9 +96,11 @@ axios.post('http://your-api-url/photo', newPhoto)
   });
 
 ```
-## 响应:
+
+## 响应
 
 返回一个表示保存成功的照片的 JSON 对象。
+
 ```json
 {
   "id": 1,
@@ -106,6 +113,7 @@ axios.post('http://your-api-url/photo', newPhoto)
 ```
 
 定义DataModel
+
 ```ts
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -132,6 +140,7 @@ export class Photo {
 ```
 
 定义相关router
+
 ```ts
 import express from 'express';
 import { savePhoto, findPhoto } from '../controllers';
@@ -160,6 +169,7 @@ export default router;
 ```
 
 执行操作
+
 ```ts
 import { Photo } from '../models';
 import { AppDataSource } from '../configuration';
@@ -191,6 +201,7 @@ export async function findPhoto(): Promise<Photo[]> {
 ```
 
 最后在datasource中注册实体
+
 ```ts
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';

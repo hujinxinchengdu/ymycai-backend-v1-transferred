@@ -188,13 +188,20 @@ router.post(
   '/company_quote',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Corrected to req.body to align with the comment
-      const { company_symbols } = req.body;
+      let companyQuotes;
 
-      // Fetching quote data for a list of company symbols
-      const companyQuotes = await getCompanyQuoteDataByCompanySymbolList(
-        company_symbols,
-      );
+      // 检查请求体中是否有 "symbolList"
+      if (req.body && Array.isArray(req.body.symbolList)) {
+        const { symbolList } = req.body;
+        // 根据symbolList获取数据
+        companyQuotes = await saveCompanyQuoteDataByCompanySymbolList(
+          symbolList,
+        );
+      } else {
+        // 没有提供symbolList，获取所有数据
+        companyQuotes = await updateAllCompanyQuoteData();
+      }
+
 
       return res.status(200).json({
         message: 'Successfully fetched market data',
