@@ -29,6 +29,7 @@ export async function getMarketNewData(
     console.log(fromDate);
 
     const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
+    console.log(marketDataApiUrl);
 
     const response = await queueRequest(marketDataApiUrl);
 

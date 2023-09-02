@@ -15,6 +15,7 @@ interface TagInfoModel {
 }
 
 interface CompanyInfoModel {
+  company_id: string;
   company_name: string;
   company_symbol: string;
   company_information: string;
@@ -46,6 +47,7 @@ async function getCompanyInfoAndTags(
     }
 
     return {
+      company_id: company.company_id,
       company_name: company.company_name,
       company_symbol: company.company_symbol,
       company_information: company.company_information,
@@ -71,6 +73,7 @@ async function getListOfCompanyInfoAndTags(
     });
 
     const companiesInfo = companies.map((company) => ({
+      company_id: company.company_id,
       company_name: company.company_name,
       company_symbol: company.company_symbol,
       company_information: company.company_information,

@@ -13,9 +13,12 @@ import {
   getLatestCompanyQuoteDataByCompanySymbolList,
   getCompanyQuoteDataByCompanySymbolList,
   getMarketDataByIdentifier,
+  saveMarketNewDataBySymbol,
 } from '../controllers';
 import { scheduleDailyCall } from '../utils/schedule-call';
-import { MarketData } from 'src/models';
+import { MarketData } from '../models';
+import { getMarketNewData } from '../services';
+import { getCompanyIdFromSymbol } from 'src/controllers/util/get-companyid-by-symbol';
 
 const router = express.Router();
 
@@ -176,6 +179,23 @@ router.get(
   },
 );
 
+router.post(
+  '/saveMarketData/:company_symbol',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const company_symbol = req.params.company_symbol; // 从URL获取公司标识符
+
+      // 获取并保存市场数据
+      await saveMarketNewDataBySymbol(company_symbol);
+
+      // 返回状态码200和最新的市场数据
+      return res.status(200).json({ message: '成功储存数据' });
+    } catch (error) {
+      return next(error); // 如果有错误，将其传递给下一个中间件
+    }
+  },
+);
+
 /**
  * @route POST /api/market_data/company_quote
  * @description Fetch market quote data for companies based on their symbols.
@@ -201,7 +221,6 @@ router.post(
         // 没有提供symbolList，获取所有数据
         companyQuotes = await updateAllCompanyQuoteData();
       }
-
 
       return res.status(200).json({
         message: 'Successfully fetched market data',

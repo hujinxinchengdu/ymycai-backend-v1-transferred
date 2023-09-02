@@ -21,6 +21,31 @@ const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to pr
 //   }
 // }
 
+async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
+  try {
+    const BATCH_SIZE = 500;
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_id: company_id },
+    });
+
+    if (!company) {
+      throw new Error(`Cannot find company!`);
+    }
+    const companyMarketData: MarketData[] = await getMarketNewData(
+      company.company_id,
+      company.company_symbol,
+    );
+
+    // 对于每家公司，将其市场数据分批保存
+    for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
+      const batch = companyMarketData.slice(i, i + BATCH_SIZE);
+      await AppDataSource.manager.save(MarketData, batch);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function saveMarketNewData(): Promise<void> {
   try {
     const companies: Company[] = await getAllCompanies();
@@ -128,6 +153,8 @@ async function getMarketDataByIdentifier(
     } else {
       companyId = identifier.companyId;
     }
+
+    await saveMarketNewDataBySymbol(companyId!);
 
     const marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
@@ -369,4 +396,5 @@ export {
   deleteOldCompanyQuoteData,
   updateAllCompanyQuoteData,
   getLatestCompanyQuoteDataByCompanySymbolList,
+  saveMarketNewDataBySymbol,
 };
