@@ -193,26 +193,26 @@ async function saveCompanyQuoteDataByCompanySymbolList(
 }
 
 async function updateAllCompanyQuoteData(): Promise<void> {
-  const currentTimeET = moment().tz('America/New_York');
+  // const currentTimeET = moment().tz('America/New_York');
 
   // Check if current time is between 9:30 am and 2:00 pm
-  if (
-    currentTimeET.isBetween(
-      moment().tz('America/New_York').hour(9).minute(30),
-      moment().tz('America/New_York').hour(14).minute(0),
-    )
-  ) {
-    try {
-      const companies = await getAllCompanies();
-      const companySymbols = companies.map((company) => company.company_symbol);
-      await saveCompanyQuoteDataByCompanySymbolList(companySymbols);
-      console.log('Company Quote data updated successfully');
-    } catch (error) {
-      console.error('Error updating Company Quote data:', error);
-    }
-  } else {
-    console.log('Outside of market hours. Not fetching data.');
+  // if (
+  //   currentTimeET.isBetween(
+  //     moment().tz('America/New_York').hour(9).minute(30),
+  //     moment().tz('America/New_York').hour(14).minute(0),
+  //   )
+  // ) {
+  try {
+    const companies = await getAllCompanies();
+    const companySymbols = companies.map((company) => company.company_symbol);
+    await saveCompanyQuoteDataByCompanySymbolList(companySymbols);
+    console.log('Company Quote data updated successfully');
+  } catch (error) {
+    console.error('Error updating Company Quote data:', error);
   }
+  // } else {
+  //   console.log('Outside of market hours. Not fetching data.');
+  // }
 }
 
 async function getCompanyQuoteDataByCompanySymbolList(
@@ -228,6 +228,35 @@ async function getCompanyQuoteDataByCompanySymbolList(
     return companyQuotes;
   } catch (error) {
     throw new Error(`Error while fetching company quotes: ${error.message}`);
+  }
+}
+
+async function getLatestCompanyQuoteDataByCompanySymbolList(
+  symbols: string[],
+): Promise<CompanyQuote[]> {
+  try {
+    // 1. 获取所有与提供的符号匹配的CompanyQuote记录
+    const companyQuotes = await AppDataSource.manager.find(CompanyQuote, {
+      where: { symbol: In(symbols) },
+      order: { record_time: 'DESC' },
+    });
+
+    // 2. 创建一个Map，用于存储每个符号的最新报价
+    const latestQuotesMap = new Map<string, CompanyQuote>();
+
+    // 3. 遍历所有的CompanyQuote记录，保存每个符号的最新报价
+    for (const quote of companyQuotes) {
+      if (!latestQuotesMap.has(quote.symbol)) {
+        latestQuotesMap.set(quote.symbol, quote);
+      }
+    }
+
+    // 4. 将Map的值转换为数组并返回
+    return Array.from(latestQuotesMap.values());
+  } catch (error) {
+    throw new Error(
+      `Error while fetching latest company quotes: ${error.message}`,
+    );
   }
 }
 
@@ -257,4 +286,5 @@ export {
   getCompanyQuoteDataByCompanySymbolList,
   deleteOldCompanyQuoteData,
   updateAllCompanyQuoteData,
+  getLatestCompanyQuoteDataByCompanySymbolList,
 };
