@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { SelectQueryBuilder, In } from 'typeorm';
 import { Company, Tag, CompanyQuote, PeerStock } from '../models';
 import { getPeerStockData } from '../services';
-import { getLatestCompanyQuoteDataByCompanySymbolList } from './market-data-usecase';
+import {
+  getLatestCompanyQuoteDataByCompanySymbolList,
+  saveCompanyQuoteDataByCompanySymbolList,
+} from './market-data-usecase';
 
 interface TagInfoModel {
   tag_id: string;
@@ -175,7 +178,9 @@ export async function getAllPeerStocks(): Promise<void> {
       .map((company) => company.company_symbol);
 
     // 获取需要新的PeerStock数据的公司的PeerStock数据
-    const newPeerStocks = await getPeerStockDataForSymbols(companiesToFetch);
+    const newPeerStocks = await getPeerStockDataForSymbolsList(
+      companiesToFetch,
+    );
 
     // 保存新的PeerStock数据到数据库
     await manager.save(PeerStock, newPeerStocks);
@@ -185,7 +190,7 @@ export async function getAllPeerStocks(): Promise<void> {
   }
 }
 
-async function getPeerStockDataForSymbols(
+async function getPeerStockDataForSymbolsList(
   companySymbols: string[],
 ): Promise<PeerStock[]> {
   const peerStocks: PeerStock[] = [];
@@ -302,10 +307,15 @@ export async function getCompanyAndPeerLatestQuotes(
       allSymbols.push(...peerStock.peer_symbols); // 假设peer_symbols是PeerStock类型里的一个属性，包含了Peer公司的symbol列表
     }
 
+    await saveCompanyQuoteDataByCompanySymbolList(allSymbols);
+
     // 获取所有相关公司的最新报价
     const latestQuotes = await getLatestCompanyQuoteDataByCompanySymbolList(
       allSymbols,
     );
+
+    console.log(latestQuotes);
+    console.log('finish');
 
     return {
       companyInfo,

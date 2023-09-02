@@ -126,62 +126,96 @@ async function getMarketDataByCompanySymbol(
   }
 }
 
+// async function saveCompanyQuoteDataByCompanySymbolList(
+//   companySymbols: string[],
+// ): Promise<void> {
+//   try {
+//     // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
+
+//     // Convert companySymbols into an array of functions returning promises
+//     const promiseFunctions = companySymbols.map(
+//       (symbol) => async () => await getCompanyQuoteData([symbol]),
+//     );
+
+//     // Fetch company quote data in chunks
+//     const allCompanyQuoteDatas = await chunkPromises(
+//       promiseFunctions,
+//       CONCURRENCY_LIMIT,
+//     );
+
+//     const companyQuoteDatas = allCompanyQuoteDatas.flat();
+
+//     const chunkSize = 500;
+//     for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
+//       const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+
+//       // 获取当前块的所有公司股票符号
+//       const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+
+//       // 为这些符号一次性查找所有公司
+//       const companies = await AppDataSource.manager.find(Company, {
+//         where: { company_symbol: In(currentChunkSymbols) },
+//       });
+
+//       // 创建一个映射来快速查找公司
+//       const companyMap = new Map(
+//         companies.map((company) => [company.company_symbol, company]),
+//       );
+
+//       const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
+
+//       currentChunk.forEach((companyQuoteData) => {
+//         const company = companyMap.get(companyQuoteData.symbol);
+//         if (!company) {
+//           console.error(
+//             `Company with symbol ${companyQuoteData.symbol} not found`,
+//           );
+//         } else {
+//           toBeSaved.push({
+//             ...companyQuoteData,
+//             company_id: company.company_id,
+//           });
+//         }
+//       });
+
+//       // Using TypeORM's save method to batch save or update market data
+//       if (toBeSaved.length > 0) {
+//         await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+//       }
+//     }
+
+//     console.log('Company Quote data save operation finished');
+//   } catch (error) {
+//     throw new Error(
+//       `Error while updating Company Quote data: ${error.message}`,
+//     );
+//   }
+// }
+
 async function saveCompanyQuoteDataByCompanySymbolList(
   companySymbols: string[],
 ): Promise<void> {
   try {
-    // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
-
-    // Convert companySymbols into an array of functions returning promises
-    const promiseFunctions = companySymbols.map(
-      (symbol) => async () => await getCompanyQuoteData([symbol]),
-    );
-
-    // Fetch company quote data in chunks
-    const allCompanyQuoteDatas = await chunkPromises(
-      promiseFunctions,
-      CONCURRENCY_LIMIT,
-    );
-
-    const companyQuoteDatas = allCompanyQuoteDatas.flat();
-
     const chunkSize = 500;
-    for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
-      const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+    const batchSize = 100; // 每批获取100家公司的数据
+    let buffer: any[] = []; // 用于暂存数据
 
-      // 获取当前块的所有公司股票符号
-      const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+    // 将companySymbols切割成多个batch
+    for (let i = 0; i < companySymbols.length; i += batchSize) {
+      const batch = companySymbols.slice(i, i + batchSize);
+      const data = await getCompanyQuoteData(batch);
+      buffer.push(...data); // 将新获取的数据添加到缓存数组
 
-      // 为这些符号一次性查找所有公司
-      const companies = await AppDataSource.manager.find(Company, {
-        where: { company_symbol: In(currentChunkSymbols) },
-      });
-
-      // 创建一个映射来快速查找公司
-      const companyMap = new Map(
-        companies.map((company) => [company.company_symbol, company]),
-      );
-
-      const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
-
-      currentChunk.forEach((companyQuoteData) => {
-        const company = companyMap.get(companyQuoteData.symbol);
-        if (!company) {
-          console.error(
-            `Company with symbol ${companyQuoteData.symbol} not found`,
-          );
-        } else {
-          toBeSaved.push({
-            ...companyQuoteData,
-            company_id: company.company_id,
-          });
-        }
-      });
-
-      // Using TypeORM's save method to batch save or update market data
-      if (toBeSaved.length > 0) {
-        await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+      // 检查是否达到批量保存的阈值
+      if (buffer.length >= chunkSize) {
+        await saveBufferToDatabase(buffer); // 保存数据
+        buffer = []; // 清空缓存数组
       }
+    }
+
+    // 如果缓存数组中仍有数据，进行最后一次保存
+    if (buffer.length > 0) {
+      await saveBufferToDatabase(buffer);
     }
 
     console.log('Company Quote data save operation finished');
@@ -192,6 +226,38 @@ async function saveCompanyQuoteDataByCompanySymbolList(
   }
 }
 
+async function saveBufferToDatabase(data: any[]) {
+  // 以下是保存数据的逻辑，与你原有的代码基本相同
+
+  const currentChunkSymbols = data.map((d) => d.symbol);
+  const companies = await AppDataSource.manager.find(Company, {
+    where: { company_symbol: In(currentChunkSymbols) },
+  });
+
+  const companyMap = new Map(
+    companies.map((company) => [company.company_symbol, company]),
+  );
+
+  const toBeSaved: DeepPartial<CompanyQuote>[] = [];
+
+  data.forEach((companyQuoteData) => {
+    const company = companyMap.get(companyQuoteData.symbol);
+    if (!company) {
+      console.error(`Company with symbol ${companyQuoteData.symbol} not found`);
+    } else {
+      toBeSaved.push({
+        ...companyQuoteData,
+        company_id: company.company_id,
+      });
+    }
+  });
+
+  if (toBeSaved.length > 0) {
+    await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+  }
+}
+
+//TODO: 需要优化获取速度
 async function updateAllCompanyQuoteData(): Promise<void> {
   // const currentTimeET = moment().tz('America/New_York');
 
