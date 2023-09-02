@@ -51,7 +51,7 @@ export async function getMarketNewData(
       tempMarketData.unadjustedVolume = data['unadjustedVolume'];
       tempMarketData.change = data['change'];
       tempMarketData.changePercent = data['changePercent'];
-      tempMarketData.vwap = data['vwap'];
+      tempMarketData.vwap = data['vwap'] ?? 0;
       tempMarketData.label = data['label'];
       tempMarketData.changeOverTime = data['changeOverTime'];
       tempMarketData.dividend_amount = 0.0;
@@ -61,7 +61,7 @@ export async function getMarketNewData(
       tempMarketData.company_id = companyId;
       MarketDataList.push(tempMarketData);
     }
-    console.log(MarketDataList.length);
+    console.log('marketdata size' + MarketDataList.length);
 
     return MarketDataList;
   } catch (error) {

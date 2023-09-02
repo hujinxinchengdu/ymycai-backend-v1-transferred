@@ -3,33 +3,42 @@ import moment from 'moment-timezone';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
-import { getAllCompanies } from './company-infomation-usecase';
+import {
+  getAllCompanies,
+  getCompaniesByPage,
+} from './company-infomation-usecase';
 import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
 import { chunkPromises } from '../utils';
+import { finished } from 'stream';
+import { start } from 'repl';
 
 const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to process at once
 
+// // 生成器，用于按需产生获取市场数据的 Promise
+// function* marketDataPromiseFactoriesGenerator(companies: Company[]) {
+//   for (const company of companies) {
+//     yield () => getMarketNewData(company.company_id, company.company_symbol);
+//   }
+// }
+
 async function saveMarketNewData(): Promise<void> {
   try {
-    const companies = await getAllCompanies();
+    const companies: Company[] = await getAllCompanies();
 
-    // Map each company to a function that, when called, fetches market data
-    const marketDataPromiseFactories = companies.map((company) => {
-      return () => getMarketNewData(company.company_id, company.company_symbol);
-    });
+    const BATCH_SIZE = 500; // 可根据需要调整这个值
 
-    // Fetch company quote data in chunks
-    const allMarketData = await chunkPromises(
-      marketDataPromiseFactories,
-      CONCURRENCY_LIMIT,
-    );
+    for (const company of companies) {
+      const companySymbol = company.company_symbol;
+      const companyMarketData: MarketData[] = await getMarketNewData(
+        company.company_id,
+        companySymbol,
+      );
 
-    const BATCH_SIZE = 500; // Adjust this value if needed
-
-    // Batch save the market data to the database
-    for (let i = 0; i < allMarketData.length; i += BATCH_SIZE) {
-      const batch = allMarketData.slice(i, i + BATCH_SIZE);
-      await AppDataSource.manager.save(MarketData, batch.flat());
+      // 对于每家公司，将其市场数据分批保存
+      for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
+        const batch = companyMarketData.slice(i, i + BATCH_SIZE);
+        await AppDataSource.manager.save(MarketData, batch);
+      }
     }
   } catch (error) {
     throw error;
@@ -106,13 +115,20 @@ async function getDayBeforeLatestMarketData(
   }
 }
 
-async function getMarketDataByCompanySymbol(
-  symbol: string,
+type Identifier = { symbol: string } | { companyId: string };
+
+async function getMarketDataByIdentifier(
+  identifier: Identifier,
 ): Promise<MarketData[]> {
   try {
-    const companyId = await getCompanyIdFromSymbol(symbol); // 获取company_id
+    let companyId: string | null = null;
 
-    // 2. 查询不重复的record_time数据
+    if ('symbol' in identifier) {
+      companyId = await getCompanyIdFromSymbol(identifier.symbol); // 获取company_id
+    } else {
+      companyId = identifier.companyId;
+    }
+
     const marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
       .distinctOn(['md.record_time'])
@@ -347,7 +363,7 @@ export {
   saveMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
-  getMarketDataByCompanySymbol,
+  getMarketDataByIdentifier,
   saveCompanyQuoteDataByCompanySymbolList,
   getCompanyQuoteDataByCompanySymbolList,
   deleteOldCompanyQuoteData,
