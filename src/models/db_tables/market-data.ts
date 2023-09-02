@@ -38,10 +38,10 @@ class MarketData {
   @Column({ type: 'varchar' })
   company_id: string;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   dividend_amount: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   split_coefficient: number;
 
   @Column({ type: 'varchar' })
@@ -56,7 +56,7 @@ class MarketData {
   @Column({ type: 'double precision' })
   changePercent: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   vwap: number;
 
   @Column({ type: 'varchar' })

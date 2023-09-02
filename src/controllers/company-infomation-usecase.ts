@@ -94,6 +94,22 @@ async function getAllCompanies(): Promise<Company[]> {
   }
 }
 
+async function getCompaniesByPage(
+  page: number,
+  pageSize: number,
+): Promise<Company[]> {
+  try {
+    const skipAmount = page * pageSize;
+    const companies = await AppDataSource.manager.find(Company, {
+      skip: skipAmount,
+      take: pageSize,
+    });
+    return companies;
+  } catch (error) {
+    throw new Error(`Error while fetching companies: ${error.message}`);
+  }
+}
+
 async function getAllCompanySymbols(): Promise<string[]> {
   try {
     const companies = await AppDataSource.manager.find(Company);
@@ -329,4 +345,5 @@ export {
   getCompanyQuoteByTag,
   findCompanyBySymbol,
   createCompany,
+  getCompaniesByPage,
 };

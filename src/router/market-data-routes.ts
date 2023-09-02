@@ -8,12 +8,14 @@ import {
   saveMarketNewData,
   getLatestMarketData,
   getDayBeforeLatestMarketData,
-  getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
   updateAllCompanyQuoteData,
   getLatestCompanyQuoteDataByCompanySymbolList,
+  getCompanyQuoteDataByCompanySymbolList,
+  getMarketDataByIdentifier,
 } from '../controllers';
 import { scheduleDailyCall } from '../utils/schedule-call';
+import { MarketData } from 'src/models';
 
 const router = express.Router();
 
@@ -145,19 +147,28 @@ router.get(
 );
 
 /**
- * @route GET /api/market_data/:symbol
- * @description 根据公司symbol获取所有的行情数据
+ * @route GET /api/market_data/:identifier
+ * @description 根据公司symbol或companyId获取所有的行情数据
  *
- * @param {string} symbol 公司symbol诸如GOOG
+ * @param {string} identifier 公司symbol诸如GOOG或companyId
  *
  * @returns {Array<MarketData>}
  */
 router.get(
-  '/:symbol',
+  '/:identifier',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const symbol = req.params.symbol; // 从URL获取股票代码
-      const marketData = await getMarketDataByCompanySymbol(symbol);
+      const identifier = req.params.identifier; // 从URL获取标识符
+
+      let marketData: MarketData[] = [];
+
+      // 检查标识符是否为UUID格式
+      if (identifier.length === 36 && identifier.includes('-')) {
+        marketData = await getMarketDataByIdentifier({ companyId: identifier });
+      } else {
+        marketData = await getMarketDataByIdentifier({ symbol: identifier });
+      }
+
       return res.status(200).json(marketData); // 明确设置状态码为200并返回JSON
     } catch (error) {
       return next(error);
@@ -167,20 +178,26 @@ router.get(
 
 /**
  * @route POST /api/market_data/company_quote
- * @description 根据symbol获取公司的company_quote市场报价数据
+ * @description Fetch market quote data for companies based on their symbols.
  *
- * @param {GetMultiCompanyInfosReqBodyModel} req.body 想要的公司symbol列表
+ * @param {GetMultiCompanyInfosReqBodyModel} req.body List of desired company symbols.
  *
- * @returns {}
+ * @returns {Object} The market quote data for the companies.
  */
 router.post(
   '/company_quote',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyQuotes = await updateAllCompanyQuoteData();
+      // Corrected to req.body to align with the comment
+      const { company_symbols } = req.body;
+
+      // Fetching quote data for a list of company symbols
+      const companyQuotes = await getCompanyQuoteDataByCompanySymbolList(
+        company_symbols,
+      );
 
       return res.status(200).json({
-        message: `Successfully fetched market data}`,
+        message: 'Successfully fetched market data',
         data: companyQuotes,
       });
     } catch (error) {
