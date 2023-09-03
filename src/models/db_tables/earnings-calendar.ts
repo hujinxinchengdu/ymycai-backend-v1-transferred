@@ -1,6 +1,14 @@
-import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  PrimaryColumn,
+  Index,
+} from 'typeorm';
 import { Company } from '..';
 
+@Index('index_on_company_id', ['company_id'])
 @Entity('earnings_calendar')
 class EarningsCalendar {
   @PrimaryColumn({ type: 'varchar' })
@@ -26,6 +34,9 @@ class EarningsCalendar {
 
   @Column({ type: 'timestamp' })
   publish_date: Date;
+
+  @Column({ type: 'varchar' })
+  company_id: string;
 
   @ManyToOne(() => Company, (company) => company.earningsCalendar)
   @JoinColumn({ name: 'company_id' })

@@ -1,11 +1,12 @@
 import { AppDataSource } from '../configuration';
 import { v4 as uuidv4 } from 'uuid';
 import { SelectQueryBuilder, In } from 'typeorm';
-import { Company, Tag, CompanyQuote, PeerStock } from '../models';
+import { Company, Tag, CompanyQuote, PeerStock, MarketData } from '../models';
 import { getPeerStockData } from '../services';
 import {
   getLatestCompanyQuoteDataByCompanySymbolList,
   saveCompanyQuoteDataByCompanySymbolList,
+  getMarketDataByIdentifier,
 } from './market-data-usecase';
 
 interface TagInfoModel {
@@ -305,12 +306,14 @@ async function createCompany(
     return null;
   }
 }
+
 export async function getCompanyAndPeerLatestQuotes(
   companySymbol: string,
 ): Promise<{
   companyInfo: CompanyInfoModel;
   peerStock: PeerStock | null;
   latestQuotes: CompanyQuote[];
+  // marketData: MarketData[];
 }> {
   try {
     // 获取目标公司的信息
@@ -333,6 +336,11 @@ export async function getCompanyAndPeerLatestQuotes(
       allSymbols,
     );
 
+    // //获取公司历史价格
+    // const marketData = await getMarketDataByIdentifier({
+    //   symbol: companySymbol,
+    // });
+
     console.log(latestQuotes);
     console.log('finish');
 
@@ -340,6 +348,7 @@ export async function getCompanyAndPeerLatestQuotes(
       companyInfo,
       peerStock,
       latestQuotes,
+      // marketData,
     };
   } catch (error) {
     console.error(

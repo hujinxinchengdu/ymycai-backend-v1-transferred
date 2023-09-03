@@ -154,9 +154,23 @@ async function getMarketDataByIdentifier(
       companyId = identifier.companyId;
     }
 
+    // 尝试从数据库中获取已有的市场数据
+    let marketData = await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'md')
+      .distinctOn(['md.record_time'])
+      .where('md.company_id = :companyId', { companyId })
+      .orderBy('md.record_time', 'DESC')
+      .getMany();
+
+    // 如果已有数据，则直接返回
+    if (marketData.length > 0) {
+      return marketData;
+    }
+
+    // 如果没有数据，则获取新的数据
     await saveMarketNewDataBySymbol(companyId!);
 
-    const marketData = await AppDataSource.manager
+    marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
       .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
