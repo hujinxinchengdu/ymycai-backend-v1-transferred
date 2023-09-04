@@ -33,8 +33,14 @@ router.get('/save_all_transaction', async (req, res, next) => {
  */
 router.get('/get_transaction_by_symbol/:symbol', async (req, res, next) => {
   try {
+    const page = parseInt((req.query.page as string) || '1');
+    const pageSize = parseInt((req.query.pageSize as string) || '10');
     const symbol = req.params.symbol;
-    const insiderTransactions = await getTransactionBySymbol(symbol);
+    const insiderTransactions = await getTransactionBySymbol(
+      symbol,
+      page,
+      pageSize,
+    );
     return res.status(200).json(insiderTransactions);
   } catch (error) {
     return next(error);

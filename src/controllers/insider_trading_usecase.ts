@@ -21,12 +21,18 @@ async function saveAllTransaction(): Promise<void> {
 
 async function getTransactionBySymbol(
   companySymbol: string,
+  page: number,
+  pageSize: number,
 ): Promise<InsiderTradingTransaction[] | null> {
   try {
+    const skip = (page - 1) * pageSize; // 计算需要跳过的记录数
+
     const transactionData = await AppDataSource.manager
       .createQueryBuilder(InsiderTradingTransaction, 'itt')
       .where('itt.symbol = :companySymbol', { companySymbol })
       .orderBy('itt.transactionDate', 'DESC')
+      .skip(skip)
+      .take(pageSize)
       .getMany();
     return transactionData;
   } catch (error) {

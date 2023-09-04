@@ -42,7 +42,7 @@ class InsiderTradingTransaction {
   @Column({ type: 'varchar' })
   transactionType: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'float' })
   securitiesOwned: number;
 
   @Column({ type: 'varchar' })
