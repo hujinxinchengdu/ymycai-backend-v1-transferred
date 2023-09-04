@@ -3,33 +3,67 @@ import moment from 'moment-timezone';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
-import { getAllCompanies } from './company-infomation-usecase';
+import {
+  getAllCompanies,
+  getCompaniesByPage,
+} from './company-infomation-usecase';
 import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
 import { chunkPromises } from '../utils';
+import { finished } from 'stream';
+import { start } from 'repl';
 
 const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to process at once
 
-async function saveMarketNewData(): Promise<void> {
-  try {
-    const companies = await getAllCompanies();
+// // 生成器，用于按需产生获取市场数据的 Promise
+// function* marketDataPromiseFactoriesGenerator(companies: Company[]) {
+//   for (const company of companies) {
+//     yield () => getMarketNewData(company.company_id, company.company_symbol);
+//   }
+// }
 
-    // Map each company to a function that, when called, fetches market data
-    const marketDataPromiseFactories = companies.map((company) => {
-      return () => getMarketNewData(company.company_id, company.company_symbol);
+async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
+  try {
+    const BATCH_SIZE = 500;
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_id: company_id },
     });
 
-    // Fetch company quote data in chunks
-    const allMarketData = await chunkPromises(
-      marketDataPromiseFactories,
-      CONCURRENCY_LIMIT,
+    if (!company) {
+      throw new Error(`Cannot find company!`);
+    }
+    const companyMarketData: MarketData[] = await getMarketNewData(
+      company.company_id,
+      company.company_symbol,
     );
 
-    const BATCH_SIZE = 500; // Adjust this value if needed
+    // 对于每家公司，将其市场数据分批保存
+    for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
+      const batch = companyMarketData.slice(i, i + BATCH_SIZE);
+      await AppDataSource.manager.save(MarketData, batch);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
 
-    // Batch save the market data to the database
-    for (let i = 0; i < allMarketData.length; i += BATCH_SIZE) {
-      const batch = allMarketData.slice(i, i + BATCH_SIZE);
-      await AppDataSource.manager.save(MarketData, batch.flat());
+async function saveMarketNewData(): Promise<void> {
+  try {
+    const companies: Company[] = await getAllCompanies();
+
+    const BATCH_SIZE = 500; // 可根据需要调整这个值
+
+    for (const company of companies) {
+      const companySymbol = company.company_symbol;
+      const companyMarketData: MarketData[] = await getMarketNewData(
+        company.company_id,
+        companySymbol,
+      );
+
+      // 对于每家公司，将其市场数据分批保存
+      for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
+        const batch = companyMarketData.slice(i, i + BATCH_SIZE);
+        await AppDataSource.manager.save(MarketData, batch);
+      }
     }
   } catch (error) {
     throw error;
@@ -106,14 +140,37 @@ async function getDayBeforeLatestMarketData(
   }
 }
 
-async function getMarketDataByCompanySymbol(
-  symbol: string,
+type Identifier = { symbol: string } | { companyId: string };
+
+async function getMarketDataByIdentifier(
+  identifier: Identifier,
 ): Promise<MarketData[]> {
   try {
-    const companyId = await getCompanyIdFromSymbol(symbol); // 获取company_id
+    let companyId: string | null = null;
 
-    // 2. 查询不重复的record_time数据
-    const marketData = await AppDataSource.manager
+    if ('symbol' in identifier) {
+      companyId = await getCompanyIdFromSymbol(identifier.symbol); // 获取company_id
+    } else {
+      companyId = identifier.companyId;
+    }
+
+    // 尝试从数据库中获取已有的市场数据
+    let marketData = await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'md')
+      .distinctOn(['md.record_time'])
+      .where('md.company_id = :companyId', { companyId })
+      .orderBy('md.record_time', 'DESC')
+      .getMany();
+
+    // 如果已有数据，则直接返回
+    if (marketData.length > 0) {
+      return marketData;
+    }
+
+    // 如果没有数据，则获取新的数据
+    await saveMarketNewDataBySymbol(companyId!);
+
+    marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
       .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
@@ -126,62 +183,96 @@ async function getMarketDataByCompanySymbol(
   }
 }
 
+// async function saveCompanyQuoteDataByCompanySymbolList(
+//   companySymbols: string[],
+// ): Promise<void> {
+//   try {
+//     // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
+
+//     // Convert companySymbols into an array of functions returning promises
+//     const promiseFunctions = companySymbols.map(
+//       (symbol) => async () => await getCompanyQuoteData([symbol]),
+//     );
+
+//     // Fetch company quote data in chunks
+//     const allCompanyQuoteDatas = await chunkPromises(
+//       promiseFunctions,
+//       CONCURRENCY_LIMIT,
+//     );
+
+//     const companyQuoteDatas = allCompanyQuoteDatas.flat();
+
+//     const chunkSize = 500;
+//     for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
+//       const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+
+//       // 获取当前块的所有公司股票符号
+//       const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+
+//       // 为这些符号一次性查找所有公司
+//       const companies = await AppDataSource.manager.find(Company, {
+//         where: { company_symbol: In(currentChunkSymbols) },
+//       });
+
+//       // 创建一个映射来快速查找公司
+//       const companyMap = new Map(
+//         companies.map((company) => [company.company_symbol, company]),
+//       );
+
+//       const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
+
+//       currentChunk.forEach((companyQuoteData) => {
+//         const company = companyMap.get(companyQuoteData.symbol);
+//         if (!company) {
+//           console.error(
+//             `Company with symbol ${companyQuoteData.symbol} not found`,
+//           );
+//         } else {
+//           toBeSaved.push({
+//             ...companyQuoteData,
+//             company_id: company.company_id,
+//           });
+//         }
+//       });
+
+//       // Using TypeORM's save method to batch save or update market data
+//       if (toBeSaved.length > 0) {
+//         await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+//       }
+//     }
+
+//     console.log('Company Quote data save operation finished');
+//   } catch (error) {
+//     throw new Error(
+//       `Error while updating Company Quote data: ${error.message}`,
+//     );
+//   }
+// }
+
 async function saveCompanyQuoteDataByCompanySymbolList(
   companySymbols: string[],
 ): Promise<void> {
   try {
-    // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
-
-    // Convert companySymbols into an array of functions returning promises
-    const promiseFunctions = companySymbols.map(
-      (symbol) => async () => await getCompanyQuoteData([symbol]),
-    );
-
-    // Fetch company quote data in chunks
-    const allCompanyQuoteDatas = await chunkPromises(
-      promiseFunctions,
-      CONCURRENCY_LIMIT,
-    );
-
-    const companyQuoteDatas = allCompanyQuoteDatas.flat();
-
     const chunkSize = 500;
-    for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
-      const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+    const batchSize = 100; // 每批获取100家公司的数据
+    let buffer: any[] = []; // 用于暂存数据
 
-      // 获取当前块的所有公司股票符号
-      const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+    // 将companySymbols切割成多个batch
+    for (let i = 0; i < companySymbols.length; i += batchSize) {
+      const batch = companySymbols.slice(i, i + batchSize);
+      const data = await getCompanyQuoteData(batch);
+      buffer.push(...data); // 将新获取的数据添加到缓存数组
 
-      // 为这些符号一次性查找所有公司
-      const companies = await AppDataSource.manager.find(Company, {
-        where: { company_symbol: In(currentChunkSymbols) },
-      });
-
-      // 创建一个映射来快速查找公司
-      const companyMap = new Map(
-        companies.map((company) => [company.company_symbol, company]),
-      );
-
-      const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
-
-      currentChunk.forEach((companyQuoteData) => {
-        const company = companyMap.get(companyQuoteData.symbol);
-        if (!company) {
-          console.error(
-            `Company with symbol ${companyQuoteData.symbol} not found`,
-          );
-        } else {
-          toBeSaved.push({
-            ...companyQuoteData,
-            company_id: company.company_id,
-          });
-        }
-      });
-
-      // Using TypeORM's save method to batch save or update market data
-      if (toBeSaved.length > 0) {
-        await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+      // 检查是否达到批量保存的阈值
+      if (buffer.length >= chunkSize) {
+        await saveBufferToDatabase(buffer); // 保存数据
+        buffer = []; // 清空缓存数组
       }
+    }
+
+    // 如果缓存数组中仍有数据，进行最后一次保存
+    if (buffer.length > 0) {
+      await saveBufferToDatabase(buffer);
     }
 
     console.log('Company Quote data save operation finished');
@@ -192,6 +283,38 @@ async function saveCompanyQuoteDataByCompanySymbolList(
   }
 }
 
+async function saveBufferToDatabase(data: any[]) {
+  // 以下是保存数据的逻辑，与你原有的代码基本相同
+
+  const currentChunkSymbols = data.map((d) => d.symbol);
+  const companies = await AppDataSource.manager.find(Company, {
+    where: { company_symbol: In(currentChunkSymbols) },
+  });
+
+  const companyMap = new Map(
+    companies.map((company) => [company.company_symbol, company]),
+  );
+
+  const toBeSaved: DeepPartial<CompanyQuote>[] = [];
+
+  data.forEach((companyQuoteData) => {
+    const company = companyMap.get(companyQuoteData.symbol);
+    if (!company) {
+      console.error(`Company with symbol ${companyQuoteData.symbol} not found`);
+    } else {
+      toBeSaved.push({
+        ...companyQuoteData,
+        company_id: company.company_id,
+      });
+    }
+  });
+
+  if (toBeSaved.length > 0) {
+    await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+  }
+}
+
+//TODO: 需要优化获取速度
 async function updateAllCompanyQuoteData(): Promise<void> {
   // const currentTimeET = moment().tz('America/New_York');
 
@@ -281,10 +404,11 @@ export {
   saveMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
-  getMarketDataByCompanySymbol,
+  getMarketDataByIdentifier,
   saveCompanyQuoteDataByCompanySymbolList,
   getCompanyQuoteDataByCompanySymbolList,
   deleteOldCompanyQuoteData,
   updateAllCompanyQuoteData,
   getLatestCompanyQuoteDataByCompanySymbolList,
+  saveMarketNewDataBySymbol,
 };

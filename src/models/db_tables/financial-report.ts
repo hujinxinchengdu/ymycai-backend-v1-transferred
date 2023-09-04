@@ -1,6 +1,14 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { Company } from '..';
 
+@Index('index_on_company_id', ['company_id'])
 @Entity('financial_reports')
 class FinancialReport {
   @PrimaryColumn({ type: 'varchar' })

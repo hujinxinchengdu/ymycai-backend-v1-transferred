@@ -1,9 +1,13 @@
 import { AppDataSource } from '../configuration';
 import { v4 as uuidv4 } from 'uuid';
 import { SelectQueryBuilder, In } from 'typeorm';
-import { Company, Tag, CompanyQuote, PeerStock } from '../models';
+import { Company, Tag, CompanyQuote, PeerStock, MarketData } from '../models';
 import { getPeerStockData } from '../services';
-import { getLatestCompanyQuoteDataByCompanySymbolList } from './market-data-usecase';
+import {
+  getLatestCompanyQuoteDataByCompanySymbolList,
+  saveCompanyQuoteDataByCompanySymbolList,
+  getMarketDataByIdentifier,
+} from './market-data-usecase';
 
 interface TagInfoModel {
   tag_id: string;
@@ -12,6 +16,7 @@ interface TagInfoModel {
 }
 
 interface CompanyInfoModel {
+  company_id: string;
   company_name: string;
   company_symbol: string;
   company_information: string;
@@ -43,6 +48,7 @@ async function getCompanyInfoAndTags(
     }
 
     return {
+      company_id: company.company_id,
       company_name: company.company_name,
       company_symbol: company.company_symbol,
       company_information: company.company_information,
@@ -68,6 +74,7 @@ async function getListOfCompanyInfoAndTags(
     });
 
     const companiesInfo = companies.map((company) => ({
+      company_id: company.company_id,
       company_name: company.company_name,
       company_symbol: company.company_symbol,
       company_information: company.company_information,
@@ -91,6 +98,22 @@ async function getAllCompanies(): Promise<Company[]> {
     return Companies;
   } catch (error) {
     throw new Error(`Error while fetching new: ${error.message}`);
+  }
+}
+
+async function getCompaniesByPage(
+  page: number,
+  pageSize: number,
+): Promise<Company[]> {
+  try {
+    const skipAmount = page * pageSize;
+    const companies = await AppDataSource.manager.find(Company, {
+      skip: skipAmount,
+      take: pageSize,
+    });
+    return companies;
+  } catch (error) {
+    throw new Error(`Error while fetching companies: ${error.message}`);
   }
 }
 
@@ -175,7 +198,9 @@ export async function getAllPeerStocks(): Promise<void> {
       .map((company) => company.company_symbol);
 
     // 获取需要新的PeerStock数据的公司的PeerStock数据
-    const newPeerStocks = await getPeerStockDataForSymbols(companiesToFetch);
+    const newPeerStocks = await getPeerStockDataForSymbolsList(
+      companiesToFetch,
+    );
 
     // 保存新的PeerStock数据到数据库
     await manager.save(PeerStock, newPeerStocks);
@@ -185,7 +210,7 @@ export async function getAllPeerStocks(): Promise<void> {
   }
 }
 
-async function getPeerStockDataForSymbols(
+async function getPeerStockDataForSymbolsList(
   companySymbols: string[],
 ): Promise<PeerStock[]> {
   const peerStocks: PeerStock[] = [];
@@ -281,12 +306,14 @@ async function createCompany(
     return null;
   }
 }
+
 export async function getCompanyAndPeerLatestQuotes(
   companySymbol: string,
 ): Promise<{
   companyInfo: CompanyInfoModel;
   peerStock: PeerStock | null;
   latestQuotes: CompanyQuote[];
+  // marketData: MarketData[];
 }> {
   try {
     // 获取目标公司的信息
@@ -302,15 +329,26 @@ export async function getCompanyAndPeerLatestQuotes(
       allSymbols.push(...peerStock.peer_symbols); // 假设peer_symbols是PeerStock类型里的一个属性，包含了Peer公司的symbol列表
     }
 
+    await saveCompanyQuoteDataByCompanySymbolList(allSymbols);
+
     // 获取所有相关公司的最新报价
     const latestQuotes = await getLatestCompanyQuoteDataByCompanySymbolList(
       allSymbols,
     );
 
+    // //获取公司历史价格
+    // const marketData = await getMarketDataByIdentifier({
+    //   symbol: companySymbol,
+    // });
+
+    console.log(latestQuotes);
+    console.log('finish');
+
     return {
       companyInfo,
       peerStock,
       latestQuotes,
+      // marketData,
     };
   } catch (error) {
     console.error(
@@ -329,4 +367,5 @@ export {
   getCompanyQuoteByTag,
   findCompanyBySymbol,
   createCompany,
+  getCompaniesByPage,
 };

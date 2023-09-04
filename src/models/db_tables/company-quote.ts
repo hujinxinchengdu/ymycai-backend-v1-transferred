@@ -5,9 +5,11 @@ import {
   PrimaryColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Company } from '..';
 
+@Index('index_on_company_id', ['company_id'])
 @Entity('company_quote')
 class CompanyQuote {
   @PrimaryColumn({ type: 'varchar' })

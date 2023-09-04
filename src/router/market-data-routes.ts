@@ -8,12 +8,17 @@ import {
   saveMarketNewData,
   getLatestMarketData,
   getDayBeforeLatestMarketData,
-  getMarketDataByCompanySymbol,
   saveCompanyQuoteDataByCompanySymbolList,
   updateAllCompanyQuoteData,
   getLatestCompanyQuoteDataByCompanySymbolList,
+  getCompanyQuoteDataByCompanySymbolList,
+  getMarketDataByIdentifier,
+  saveMarketNewDataBySymbol,
 } from '../controllers';
 import { scheduleDailyCall } from '../utils/schedule-call';
+import { MarketData } from '../models';
+import { getMarketNewData } from '../services';
+import { getCompanyIdFromSymbol } from 'src/controllers/util/get-companyid-by-symbol';
 
 const router = express.Router();
 
@@ -145,19 +150,28 @@ router.get(
 );
 
 /**
- * @route GET /api/market_data/:symbol
- * @description 根据公司symbol获取所有的行情数据
+ * @route GET /api/market_data/:identifier
+ * @description 根据公司symbol或companyId获取所有的行情数据
  *
- * @param {string} symbol 公司symbol诸如GOOG
+ * @param {string} identifier 公司symbol诸如GOOG或companyId
  *
  * @returns {Array<MarketData>}
  */
 router.get(
-  '/:symbol',
+  '/:identifier',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const symbol = req.params.symbol; // 从URL获取股票代码
-      const marketData = await getMarketDataByCompanySymbol(symbol);
+      const identifier = req.params.identifier; // 从URL获取标识符
+
+      let marketData: MarketData[] = [];
+
+      // 检查标识符是否为UUID格式
+      if (identifier.length === 36 && identifier.includes('-')) {
+        marketData = await getMarketDataByIdentifier({ companyId: identifier });
+      } else {
+        marketData = await getMarketDataByIdentifier({ symbol: identifier });
+      }
+
       return res.status(200).json(marketData); // 明确设置状态码为200并返回JSON
     } catch (error) {
       return next(error);
@@ -165,22 +179,51 @@ router.get(
   },
 );
 
+router.post(
+  '/saveMarketData/:company_symbol',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const company_symbol = req.params.company_symbol; // 从URL获取公司标识符
+
+      // 获取并保存市场数据
+      await saveMarketNewDataBySymbol(company_symbol);
+
+      // 返回状态码200和最新的市场数据
+      return res.status(200).json({ message: '成功储存数据' });
+    } catch (error) {
+      return next(error); // 如果有错误，将其传递给下一个中间件
+    }
+  },
+);
+
 /**
  * @route POST /api/market_data/company_quote
- * @description 根据symbol获取公司的company_quote市场报价数据
+ * @description Fetch market quote data for companies based on their symbols.
  *
- * @param {GetMultiCompanyInfosReqBodyModel} req.body 想要的公司symbol列表
+ * @param {GetMultiCompanyInfosReqBodyModel} req.body List of desired company symbols.
  *
- * @returns {}
+ * @returns {Object} The market quote data for the companies.
  */
 router.post(
   '/company_quote',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyQuotes = await updateAllCompanyQuoteData();
+      let companyQuotes;
+
+      // 检查请求体中是否有 "symbolList"
+      if (req.body && Array.isArray(req.body.symbolList)) {
+        const { symbolList } = req.body;
+        // 根据symbolList获取数据
+        companyQuotes = await saveCompanyQuoteDataByCompanySymbolList(
+          symbolList,
+        );
+      } else {
+        // 没有提供symbolList，获取所有数据
+        companyQuotes = await updateAllCompanyQuoteData();
+      }
 
       return res.status(200).json({
-        message: `Successfully fetched market data}`,
+        message: 'Successfully fetched market data',
         data: companyQuotes,
       });
     } catch (error) {

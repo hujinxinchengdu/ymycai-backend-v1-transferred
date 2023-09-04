@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Company } from '..';
 
+@Index('index_on_company_symbol', ['company_symbol'])
 @Entity('peer_stocks')
 class PeerStock {
   @PrimaryColumn({ type: 'varchar' })

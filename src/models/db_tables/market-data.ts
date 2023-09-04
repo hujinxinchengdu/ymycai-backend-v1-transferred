@@ -6,9 +6,11 @@ import {
   PrimaryColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Company } from '..';
 
+@Index('index_on_company_id_and_record_time', ['company_id', 'record_time'])
 @Entity('market_data')
 class MarketData {
   @PrimaryColumn({ type: 'varchar' })
@@ -38,10 +40,10 @@ class MarketData {
   @Column({ type: 'varchar' })
   company_id: string;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   dividend_amount: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   split_coefficient: number;
 
   @Column({ type: 'varchar' })
@@ -56,7 +58,7 @@ class MarketData {
   @Column({ type: 'double precision' })
   changePercent: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   vwap: number;
 
   @Column({ type: 'varchar' })
