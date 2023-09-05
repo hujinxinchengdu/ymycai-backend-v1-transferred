@@ -1,11 +1,11 @@
 import { InsiderTradingTransaction } from '../models';
 import { AppDataSource } from '../configuration';
 
-import { getInsidetrader } from '../services';
+import { getInsiderTrader } from '../services';
 
 async function saveAllTransaction(): Promise<void> {
   try {
-    const transactions = await getInsidetrader();
+    const transactions = await getInsiderTrader();
 
     const BATCH_SIZE = 500; // 可根据需要调整这个值
     console.log(transactions);

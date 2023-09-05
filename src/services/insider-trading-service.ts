@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 const API_KEY = process.env.FINANCIAL_MODELING_KEY;
 const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
 
-export async function getInsidetrader(): Promise<InsiderTradingTransaction[]> {
+export async function getInsiderTrader(): Promise<InsiderTradingTransaction[]> {
   //通过第三方api获取内幕交易
   const insideTraderApiUrl = `${BASE_URL}/api/v4/insider-trading?transactionType=P-Purchase,S-Sale&page=0&apikey=${API_KEY}`;
 

@@ -1,28 +1,19 @@
 import { AppDataSource } from '../configuration';
 import { v4 as uuidv4 } from 'uuid';
 import { SelectQueryBuilder, In } from 'typeorm';
-import { Company, Tag, CompanyQuote, PeerStock, MarketData } from '../models';
+import {
+  Company,
+  Tag,
+  CompanyQuote,
+  PeerStock,
+  CompanyInfoModel,
+} from '../models';
 import { getPeerStockData } from '../services';
 import {
   getLatestCompanyQuoteDataByCompanySymbolList,
   saveCompanyQuoteDataByCompanySymbolList,
   getMarketDataByIdentifier,
 } from './market-data-usecase';
-
-interface TagInfoModel {
-  tag_id: string;
-  tag_cn: string;
-  tag_en: string;
-}
-
-interface CompanyInfoModel {
-  company_id: string;
-  company_name: string;
-  company_symbol: string;
-  company_information: string;
-  industry_position: string;
-  tags: TagInfoModel[];
-}
 
 interface CompanyInfoListModel {
   companies: CompanyInfoModel[];

@@ -1,8 +1,8 @@
 export interface CompanyQuotesModel {
-  companies: CompanyInfoModel[];
+  companies: CompanyModel[];
 }
 
-export interface CompanyInfoModel {
+export interface CompanyModel {
   company_id: string;
   company_name: string;
   company_symbol: string;
@@ -13,6 +13,21 @@ export interface CompanyInfoModel {
   info_create_time: Date;
   info_update_time: Date;
   earnings_announcement?: Date;
+}
+
+export interface CompanyInfoModel {
+  company_id: string;
+  company_name: string;
+  company_symbol: string;
+  company_information: string;
+  industry_position: string;
+  tags: TagInfoModel[];
+}
+
+export interface TagInfoModel {
+  tag_id: string;
+  tag_cn: string;
+  tag_en: string;
 }
 
 // GET /api/companies/company_infos/:companySymbol

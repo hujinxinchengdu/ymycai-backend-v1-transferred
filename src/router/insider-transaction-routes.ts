@@ -2,7 +2,7 @@ import express from 'express';
 import {
   getTransactionBySymbol,
   saveAllTransaction,
-} from '../controllers/insider_trading_usecase';
+} from '../controllers/insider-trading-usecase';
 
 const router = express.Router();
 
