@@ -108,9 +108,15 @@ async function getCompaniesByPage(
   }
 }
 
-async function getAllCompanySymbols(): Promise<string[]> {
+async function getAllCompanySymbols(
+  page: number = 0,
+  pageSize: number = 50,
+): Promise<string[]> {
   try {
-    const companies = await AppDataSource.manager.find(Company);
+    const companies = await AppDataSource.manager.find(Company, {
+      skip: page * pageSize,
+      take: pageSize,
+    });
     const companySymbols = companies.map((company) => company.company_symbol);
     return companySymbols;
   } catch (error) {

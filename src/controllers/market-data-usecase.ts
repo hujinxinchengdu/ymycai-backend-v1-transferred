@@ -358,24 +358,15 @@ async function getLatestCompanyQuoteDataByCompanySymbolList(
   symbols: string[],
 ): Promise<CompanyQuote[]> {
   try {
-    // 1. 获取所有与提供的符号匹配的CompanyQuote记录
-    const companyQuotes = await AppDataSource.manager.find(CompanyQuote, {
-      where: { symbol: In(symbols) },
-      order: { record_time: 'DESC' },
-    });
-
-    // 2. 创建一个Map，用于存储每个符号的最新报价
-    const latestQuotesMap = new Map<string, CompanyQuote>();
-
-    // 3. 遍历所有的CompanyQuote记录，保存每个符号的最新报价
-    for (const quote of companyQuotes) {
-      if (!latestQuotesMap.has(quote.symbol)) {
-        latestQuotesMap.set(quote.symbol, quote);
-      }
-    }
-
-    // 4. 将Map的值转换为数组并返回
-    return Array.from(latestQuotesMap.values());
+    const symbolsStr = symbols.map((s) => `'${s}'`).join(', ');
+    const query = `
+      SELECT DISTINCT ON (symbol) *
+      FROM company_quote
+      WHERE symbol IN (${symbolsStr})
+      ORDER BY symbol, record_time DESC;
+    `;
+    const companyQuotes = await AppDataSource.manager.query(query);
+    return companyQuotes;
   } catch (error) {
     throw new Error(
       `Error while fetching latest company quotes: ${error.message}`,
