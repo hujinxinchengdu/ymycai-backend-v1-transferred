@@ -233,3 +233,8 @@ export const AppDataSource = new DataSource({
   logging: false,
 });
 ```
+
+Error Handling
+- Error `env: sh\r: No such file or directory``
+
+  follow the instruction on this link: https://stackoverflow.com/a/75788861
