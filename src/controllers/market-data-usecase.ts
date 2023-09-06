@@ -7,7 +7,7 @@ import {
   getAllCompanies,
   getCompaniesByPage,
 } from './company-infomation-usecase';
-import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
+import { getCompanyIdFromSymbol } from './util/get-company-by-symbol';
 import { chunkPromises } from '../utils';
 import { finished } from 'stream';
 import { start } from 'repl';
@@ -21,11 +21,13 @@ const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to pr
 //   }
 // }
 
-async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
+async function saveMarketNewDataBySymbol(
+  company_symbol: string,
+): Promise<MarketData[]> {
   try {
     const BATCH_SIZE = 500;
     const company = await AppDataSource.manager.findOne(Company, {
-      where: { company_id: company_id },
+      where: { company_symbol: company_symbol },
     });
 
     if (!company) {
@@ -36,11 +38,18 @@ async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
       company.company_symbol,
     );
 
+    // 对数据按照时间（ASC）排序
+    companyMarketData.sort(
+      (a, b) => a.record_time.getTime() - b.record_time.getTime(),
+    );
+
     // 对于每家公司，将其市场数据分批保存
     for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
       const batch = companyMarketData.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(MarketData, batch);
     }
+
+    return companyMarketData; // Return the newly saved data
   } catch (error) {
     throw error;
   }
@@ -144,6 +153,8 @@ type Identifier = { symbol: string } | { companyId: string };
 
 async function getMarketDataByIdentifier(
   identifier: Identifier,
+  limit: number = 1000,
+  offset: number = 0,
 ): Promise<MarketData[]> {
   try {
     let companyId: string | null = null;
@@ -154,28 +165,21 @@ async function getMarketDataByIdentifier(
       companyId = identifier.companyId;
     }
 
-    // 尝试从数据库中获取已有的市场数据
     let marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
       .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
       .orderBy('md.record_time', 'ASC')
+      .skip(offset)
+      .take(limit)
       .getMany();
 
-    // 如果已有数据，则直接返回
     if (marketData.length > 0) {
       return marketData;
     }
 
     // 如果没有数据，则获取新的数据
-    await saveMarketNewDataBySymbol(companyId!);
-
-    marketData = await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'md')
-      .distinctOn(['md.record_time'])
-      .where('md.company_id = :companyId', { companyId })
-      .orderBy('md.record_time', 'DESC')
-      .getMany();
+    marketData = await saveMarketNewDataBySymbol(companyId!); // Assuming this function now returns the saved data
 
     return marketData;
   } catch (error) {

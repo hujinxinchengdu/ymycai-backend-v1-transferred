@@ -1,8 +1,3 @@
-import { GetCompaniesQuotesReqBodyModel } from './../models/requests/market-data';
-/**
- * This file contains routes that proxy the "/api/marketdata" path.
- */
-
 import express, { Request, Response, NextFunction } from 'express';
 import {
   saveMarketNewData,
@@ -11,14 +6,11 @@ import {
   saveCompanyQuoteDataByCompanySymbolList,
   updateAllCompanyQuoteData,
   getLatestCompanyQuoteDataByCompanySymbolList,
-  getCompanyQuoteDataByCompanySymbolList,
   getMarketDataByIdentifier,
   saveMarketNewDataBySymbol,
 } from '../controllers';
 import { scheduleDailyCall } from '../utils/schedule-call';
 import { MarketData } from '../models';
-import { getMarketNewData } from '../services';
-import { getCompanyIdFromSymbol } from 'src/controllers/util/get-companyid-by-symbol';
 
 const router = express.Router();
 
@@ -161,18 +153,27 @@ router.get(
   '/:identifier',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const identifier = req.params.identifier; // 从URL获取标识符
+      const identifier = req.params.identifier;
+      const limit = parseInt(req.query.limit as string) || 1000;
+      const offset = parseInt(req.query.offset as string) || 0;
 
       let marketData: MarketData[] = [];
 
-      // 检查标识符是否为UUID格式
       if (identifier.length === 36 && identifier.includes('-')) {
-        marketData = await getMarketDataByIdentifier({ companyId: identifier });
+        marketData = await getMarketDataByIdentifier(
+          { companyId: identifier },
+          limit,
+          offset,
+        );
       } else {
-        marketData = await getMarketDataByIdentifier({ symbol: identifier });
+        marketData = await getMarketDataByIdentifier(
+          { symbol: identifier },
+          limit,
+          offset,
+        );
       }
 
-      return res.status(200).json(marketData); // 明确设置状态码为200并返回JSON
+      return res.status(200).json(marketData);
     } catch (error) {
       return next(error);
     }
