@@ -14,7 +14,11 @@ export interface CompanyModel {
   info_update_time: Date;
   earnings_announcement?: Date;
 }
-
+export interface CompanySearchModel {
+  company_id: string;
+  company_name: string;
+  company_symbol: string;
+}
 export interface CompanyInfoModel {
   company_id: string;
   company_name: string;
@@ -37,6 +41,9 @@ export interface GetCompanyInfoResponseModel extends CompanyInfoModel {}
 export interface GetMultiCompanyInfosReqBodyModel {
   companySymbols: string[];
 }
+
+// GET /api/search/:companySymbol
+export interface GetCompanySearchModel extends CompanySearchModel {}
 
 export interface GetMultiCompanyInfosResponseModel
   extends Array<CompanyInfoModel> {}
