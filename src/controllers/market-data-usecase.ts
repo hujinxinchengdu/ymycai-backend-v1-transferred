@@ -159,7 +159,7 @@ async function getMarketDataByIdentifier(
       .createQueryBuilder(MarketData, 'md')
       .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
-      .orderBy('md.record_time', 'DESC')
+      .orderBy('md.record_time', 'ASC')
       .getMany();
 
     // 如果已有数据，则直接返回
