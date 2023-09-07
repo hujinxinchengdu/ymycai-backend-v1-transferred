@@ -55,7 +55,7 @@ class InsiderTradingTransaction {
   @Column({ type: 'varchar' })
   typeOfOwner: string;
 
-  @Column({ type: 'char', length: 1 })
+  @Column({ type: 'varchar' })
   acquistionOrDisposition: string;
 
   @Column({ type: 'varchar' })
