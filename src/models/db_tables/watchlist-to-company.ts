@@ -9,8 +9,8 @@ class WatchlistToCompany {
   @PrimaryColumn()
   company_id: string;
 
-  @Column({ type: 'int' })
-  order: number;
+  @Column({ type: 'int', name: 'sort_order' })
+  sortOrder: number;
 
   @ManyToOne(() => Watchlist, (watchlist) => watchlist.companyConnection)
   @JoinColumn({ name: 'watchlist_id' })

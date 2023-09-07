@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import { Company } from '..';
 
-@Index('index_on_company_id', ['company_id'])
 @Entity('earnings_calendar')
 class EarningsCalendar {
   @PrimaryColumn({ type: 'varchar' })

@@ -5,3 +5,4 @@ export * from './financial-report-usecase';
 export * from './authentication-usecase';
 export * from './insider-trading-usecase';
 export * from './search-usecase';
+export * from './watchlist-usercase';

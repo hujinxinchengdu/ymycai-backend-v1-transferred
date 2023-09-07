@@ -151,6 +151,8 @@ async function getDayBeforeLatestMarketData(
 
 type Identifier = { symbol: string } | { companyId: string };
 
+import { subDays } from 'date-fns'; // date-fns库用于日期操作
+
 async function getMarketDataByIdentifier(
   identifier: Identifier,
   limit: number = 1000,
@@ -165,13 +167,19 @@ async function getMarketDataByIdentifier(
       companyId = identifier.companyId;
     }
 
+    // 计算日期范围
+    const endDate = new Date(); // 今天
+    const startDate = subDays(endDate, limit + offset); // 从今天往前数 (limit + offset) 天
+    const effectiveEndDate = subDays(endDate, offset); // 从今天往前数 offset 天，作为实际的结束日期
+
     let marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
-      .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
+      .andWhere('md.record_time BETWEEN :startDate AND :effectiveEndDate', {
+        startDate,
+        effectiveEndDate,
+      })
       .orderBy('md.record_time', 'ASC')
-      .skip(offset)
-      .take(limit)
       .getMany();
 
     if (marketData.length > 0) {
