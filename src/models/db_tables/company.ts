@@ -8,6 +8,7 @@ import {
   PrimaryColumn,
   OneToMany,
   OneToOne,
+  Index,
 } from 'typeorm';
 import {
   Tag,
@@ -25,6 +26,8 @@ import {
   PeerStock,
 } from '..';
 
+@Index('index_on_company_symbol', ['company_symbol'])
+@Index('index_on_company_id', ['company_id'])
 @Entity('companies')
 class Company {
   @PrimaryColumn({ type: 'varchar' })

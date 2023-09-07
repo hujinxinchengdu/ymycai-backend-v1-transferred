@@ -22,8 +22,9 @@ class Watchlist {
   @OneToMany(
     () => WatchlistToCompany,
     (watchlistToCompany) => watchlistToCompany.watchlist,
+    { nullable: true, eager: true },
   )
-  companyConnection: WatchlistToCompany[];
+  companyConnection: WatchlistToCompany[] | null;
 
   @ManyToOne(() => User, (user) => user.watchlists)
   @JoinColumn({ name: 'user_id' }) // This denotes the foreign key column.
