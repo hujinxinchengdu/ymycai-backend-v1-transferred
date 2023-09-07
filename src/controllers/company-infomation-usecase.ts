@@ -338,7 +338,6 @@ export async function getCompanyAndPeerLatestQuotes(
     //   symbol: companySymbol,
     // });
 
-    console.log(latestQuotes);
     console.log('finish');
 
     return {

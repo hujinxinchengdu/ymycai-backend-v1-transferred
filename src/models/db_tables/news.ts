@@ -15,10 +15,10 @@ class News {
   @PrimaryColumn({ type: 'varchar' })
   news_id: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   title: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   url: string;
 
   @CreateDateColumn()

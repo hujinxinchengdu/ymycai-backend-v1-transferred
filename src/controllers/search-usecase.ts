@@ -48,7 +48,6 @@ async function getSymbolList(
       },
     );
 
-    console.log('finish');
     return existingCompanies;
   } catch (error) {
     throw new Error(`Error while getting symbol list: ${error.message}`);

@@ -26,10 +26,8 @@ export async function getMarketNewData(
     } else {
       fromDate = '1200-01-01'; // 或其他远古日期，作为默认起始日期
     }
-    console.log(fromDate);
 
     const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
-    console.log(marketDataApiUrl);
 
     const response = await queueRequest(marketDataApiUrl);
 
@@ -84,8 +82,6 @@ export async function getCompanyQuoteData(
 
     const companyQuoteData = await queueRequest(companyQuoteDataApiUrl);
     const quoteRawData = companyQuoteData.data;
-
-    console.log(quoteRawData);
 
     for (const quoteItem of quoteRawData) {
       const tempMarketData = new CompanyQuote();

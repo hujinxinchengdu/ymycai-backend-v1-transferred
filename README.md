@@ -15,6 +15,39 @@ npm install
 npm run start:cloud_dev / local_dev / local_product / product / dev / dev
 ```
 
+# API返回规范
+对应返回的内容，常见的做法是：
+
+status：http的status code
+如果有自己定义的额外的错误，那么也可以考虑用自己定义的错误码
+message：对应的文字描述信息
+如果是出错，则显示具体的错误信息
+否则操作成功，一般简化处理都是返回OK
+data
+对应数据的json字符串
+如果是数组，则对应最外层是[]的list
+如果是对象，则对应最外层是{}的dict
+```json
+{
+ "status": 200,
+ "message": "new user has created",
+ "data": {
+   "id": "user-4d51faba-97ff-4adf-b256-40d7c9c68103",
+   "firstName": "crifan",
+   "lastName": "Li",
+   "password": "654321",
+   "phone": "13511112222",
+   "createdAt": "2016-10-24T20:39:46",
+   "updatedAt": "2016-10-24T20:39:46"
+   ......
+ }
+ {
+ "code": 401,
+ "message": "invalid access token: wrong or expired"
+}
+```
+
+
 # API Example
 
 API文档例子

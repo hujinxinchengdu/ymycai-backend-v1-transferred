@@ -41,7 +41,6 @@ const createNewWatchlist = async (
   if (watchlistCount >= 10) {
     return 'You have reached the maximum number of watchlists. Cannot create more.';
   }
-  console.log(watchlistName, userId);
 
   // Create a new watchlist for the user
   const newWatchlist = new Watchlist();

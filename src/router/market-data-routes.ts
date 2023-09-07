@@ -154,7 +154,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const identifier = req.params.identifier;
-      const limit = parseInt(req.query.limit as string) || 1000;
+      const limit = parseInt(req.query.limit as string) || 2000;
       const offset = parseInt(req.query.offset as string) || 0;
 
       let marketData: MarketData[] = [];
