@@ -12,19 +12,10 @@ const createDefaultWatchlist = async (userId: string) => {
 
   await AppDataSource.manager.save(Watchlist, watchlist);
 
-  const defaultCompanies = ['AAPL', 'MSFT'];
-  for (let i = 0; i < defaultCompanies.length; i++) {
-    const company = await AppDataSource.manager.findOne(Company, {
-      where: { company_symbol: defaultCompanies[i] },
-    });
-    if (company) {
-      const watchlistToCompany = new WatchlistToCompany();
-      watchlistToCompany.watchlist_id = watchlist.watchlist_id;
-      watchlistToCompany.company_id = company.company_id;
-      watchlistToCompany.sortOrder = i + 1; // Setting order starting from 1
-      await AppDataSource.manager.save(WatchlistToCompany, watchlistToCompany);
-    }
-  }
+  addCompanyToWatchlist(watchlist.name, 'MSFT');
+  addCompanyToWatchlist(watchlist.name, 'AAPL');
+  addCompanyToWatchlist(watchlist.name, 'TSLA');
+  addCompanyToWatchlist(watchlist.name, 'GOOG');
 };
 
 //用户自定义的创建一个新的自选股列表, 每个用户最多创建10个自选股列表
