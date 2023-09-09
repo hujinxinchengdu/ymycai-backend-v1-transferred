@@ -1,7 +1,8 @@
 import { InsiderTradingTransaction } from '../models';
 import { AppDataSource } from '../configuration';
 
-import { getInsidetrader } from '../services';
+import { getCompanyNewInsidetrader, getInsidetrader } from '../services';
+import { getAllCompanySymbols } from './company-infomation-usecase';
 
 async function saveAllTransaction(): Promise<void> {
   try {
@@ -15,6 +16,34 @@ async function saveAllTransaction(): Promise<void> {
     }
     return;
   } catch (error) {
+    throw error;
+  }
+}
+
+async function saveAllCompanyTransaction(): Promise<void> {
+  try {
+    const companySymbols: string[] = await getAllCompanySymbols();
+    const batchSize = 10;
+    let start = 0;
+
+    while (start < companySymbols.length) {
+      const symbolsBatch = companySymbols.slice(start, start + batchSize);
+      const transactions = await getCompanyNewInsidetrader(symbolsBatch);
+      //开始插入
+      const BATCH_SIZE = 500; // 可根据需要调整这个值
+      try {
+        for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
+          const batch = transactions.slice(i, i + BATCH_SIZE);
+          await AppDataSource.manager.save(InsiderTradingTransaction, batch);
+        }
+      } catch (error) {
+        console.error('Error inserting insider trade data', error.message);
+        throw error;
+      }
+      start += batchSize;
+    }
+  } catch (error) {
+    console.error('An error occurred', error.message);
     throw error;
   }
 }
@@ -40,4 +69,8 @@ async function getTransactionBySymbol(
   }
 }
 
-export { saveAllTransaction, getTransactionBySymbol };
+export {
+  saveAllTransaction,
+  getTransactionBySymbol,
+  saveAllCompanyTransaction,
+};

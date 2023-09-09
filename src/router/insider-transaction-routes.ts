@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getTransactionBySymbol,
+  saveAllCompanyTransaction,
   saveAllTransaction,
 } from '../controllers/insider_trading_usecase';
 
@@ -41,6 +42,23 @@ router.get('/get_transaction_by_symbol/:symbol', async (req, res, next) => {
       page,
       pageSize,
     );
+    return res.status(200).json(insiderTransactions);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * @route GET /api/insider_transactions/save_all_transaction
+ * @description
+ *
+ * @param {}
+ *
+ * @returns {}
+ */
+router.get('/save_all_company_transaction', async (req, res, next) => {
+  try {
+    const insiderTransactions = await saveAllCompanyTransaction();
     return res.status(200).json(insiderTransactions);
   } catch (error) {
     return next(error);

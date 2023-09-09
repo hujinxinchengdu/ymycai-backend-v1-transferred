@@ -26,11 +26,7 @@ export async function getMarketNewData(
     } else {
       fromDate = '1200-01-01'; // 或其他远古日期，作为默认起始日期
     }
-    console.log(fromDate);
-
     const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
-    console.log(marketDataApiUrl);
-
     const response = await queueRequest(marketDataApiUrl);
 
     const tempdate = response.data;
@@ -62,7 +58,6 @@ export async function getMarketNewData(
       tempMarketData.company_id = companyId;
       MarketDataList.push(tempMarketData);
     }
-    console.log('marketdata size' + MarketDataList.length);
 
     return MarketDataList;
   } catch (error) {

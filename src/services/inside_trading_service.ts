@@ -1,6 +1,10 @@
 import { Company, InsiderTradingTransaction, MarketData } from '../models';
 import { queueRequest } from '../utils';
-import { findCompanyBySymbol, getAllCompanySymbols } from '../controllers';
+import {
+  findCompanyBySymbol,
+  getAllCompanySymbols,
+  getTransactionBySymbol,
+} from '../controllers';
 import { v4 as uuidv4 } from 'uuid';
 
 const API_KEY = process.env.FINANCIAL_MODELING_KEY;
@@ -42,6 +46,57 @@ export async function getInsidetrader(): Promise<InsiderTradingTransaction[]> {
         tempInsiderTradingTransaction.securityName = data['securityName'];
         tempInsiderTradingTransaction.link = data['link'];
         insiderTraderList.push(tempInsiderTradingTransaction);
+      }
+    }
+    return insiderTraderList;
+  } catch (error) {
+    console.error(`Error get insider trade data`, error.message);
+    throw error;
+  }
+}
+
+export async function getCompanyNewInsidetrader(
+  symbols: string[],
+): Promise<InsiderTradingTransaction[]> {
+  //通过第三方api获取内幕交易
+  const insiderTraderList: InsiderTradingTransaction[] = [];
+  try {
+    for (const symbol of symbols) {
+      const insideTraderApiUrl = `${BASE_URL}/api/v4/insider-trading?symbol=${symbol}&page=0&apikey=${API_KEY}`;
+      const response = await queueRequest(insideTraderApiUrl);
+      const tempdate = response.data;
+      if (tempdate) {
+        for (const data of tempdate) {
+          const tempInsiderTradingTransaction = new InsiderTradingTransaction();
+          tempInsiderTradingTransaction.transaction_id = uuidv4();
+          tempInsiderTradingTransaction.symbol = data['symbol'] || 'n/a';
+          tempInsiderTradingTransaction.reportingCik =
+            data['reportingCik'] || 'n/a';
+          tempInsiderTradingTransaction.filingDate =
+            data['filingDate'] || new Date();
+          tempInsiderTradingTransaction.transactionDate =
+            data['transactionDate'] || new Date();
+          tempInsiderTradingTransaction.transactionType =
+            data['transactionType'] || 'n/a';
+          tempInsiderTradingTransaction.securitiesOwned =
+            data['securitiesOwned'] || -1;
+          tempInsiderTradingTransaction.companyCik =
+            data['companyCik'] || 'n/a';
+          tempInsiderTradingTransaction.reportingName =
+            data['reportingName'] || 'n/a';
+          tempInsiderTradingTransaction.typeOfOwner =
+            data['typeOfOwner'] || 'n/a';
+          tempInsiderTradingTransaction.acquistionOrDisposition =
+            data['acquistionOrDisposition'] || 'n/a';
+          tempInsiderTradingTransaction.formType = data['formType'] || 'n/a';
+          tempInsiderTradingTransaction.securitiesTransacted =
+            data['securitiesTransacted'] || -1;
+          tempInsiderTradingTransaction.price = data['price'] || -1;
+          tempInsiderTradingTransaction.securityName =
+            data['securityName'] || 'n/a';
+          tempInsiderTradingTransaction.link = data['link'] || 'n/a';
+          insiderTraderList.push(tempInsiderTradingTransaction);
+        }
       }
     }
     return insiderTraderList;
