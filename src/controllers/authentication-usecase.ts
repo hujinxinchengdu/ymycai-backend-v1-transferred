@@ -9,6 +9,7 @@ const userProfile = async (userFromAuth0: any): Promise<User> => {
 
   if (!user) {
     user = new User();
+    user.user_id = userFromAuth0.sub;
     user.auth0Id = userFromAuth0.sub;
     user.email = userFromAuth0.email;
     user.emailVerified = userFromAuth0.email_verified;

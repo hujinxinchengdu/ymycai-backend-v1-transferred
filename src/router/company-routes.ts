@@ -134,7 +134,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const page = parseInt(req.query.page as string) || 0;
-      const pageSize = parseInt(req.query.pageSize as string) || 1000;
+      const pageSize = parseInt(req.query.pageSize as string) || 50;
       const getAll = req.query.getAll as 'all' | null;
 
       const company_symbols: GetAllCompanySymbolsResponseModel =
