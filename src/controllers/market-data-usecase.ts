@@ -5,9 +5,14 @@ import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
 import {
   getAllCompanies,
+  getAllCompanySymbols,
   getCompaniesByPage,
 } from './company-infomation-usecase';
-import { getCompanyIdFromSymbol } from './util/get-company-by-symbol';
+import {
+  getCompanyFromId,
+  getCompanyFromSymbol,
+  getCompanyIdFromSymbol,
+} from './util/get-company-by-symbol';
 import { chunkPromises } from '../utils';
 import { finished } from 'stream';
 import { start } from 'repl';
@@ -23,7 +28,7 @@ const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to pr
 
 async function saveMarketNewDataBySymbol(
   company_symbol: string,
-): Promise<MarketData[]> {
+): Promise<void> {
   try {
     const BATCH_SIZE = 500;
     const company = await AppDataSource.manager.findOne(Company, {
@@ -38,18 +43,11 @@ async function saveMarketNewDataBySymbol(
       company.company_symbol,
     );
 
-    // 对数据按照时间（ASC）排序
-    companyMarketData.sort(
-      (a, b) => a.record_time.getTime() - b.record_time.getTime(),
-    );
-
     // 对于每家公司，将其市场数据分批保存
     for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
       const batch = companyMarketData.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(MarketData, batch);
     }
-
-    return companyMarketData; // Return the newly saved data
   } catch (error) {
     throw error;
   }
@@ -79,76 +77,6 @@ async function saveMarketNewData(): Promise<void> {
   }
 }
 
-async function getLastMarketDataForServices(
-  companyId: string,
-): Promise<MarketData | null> {
-  try {
-    return await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'market_data')
-      .where('market_data.company_id = :companyId', { companyId })
-      .orderBy('market_data.record_time', 'DESC')
-      .getOne();
-  } catch (error) {
-    console.error('Error fetching last market data:', error.message);
-    throw error;
-  }
-}
-
-async function getLatestMarketData(
-  companySymbol: string,
-): Promise<MarketData | null> {
-  try {
-    const companyId = await getCompanyIdFromSymbol(companySymbol);
-    if (companyId) {
-      return await AppDataSource.manager
-        .createQueryBuilder(MarketData, 'market_data')
-        .where('market_data.company_id = :companyId', { companyId })
-        .orderBy('market_data.record_time', 'DESC')
-        .getOne();
-    }
-    return null;
-  } catch (error) {
-    console.error('Error fetching last market data:', error.message);
-    throw error;
-  }
-}
-
-async function getDayBeforeLatestMarketData(
-  companySymbol: string,
-): Promise<MarketData | null> {
-  try {
-    const companyId = await getCompanyIdFromSymbol(companySymbol);
-    if (!companyId) return null;
-
-    const latestMarketData = await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'market_data')
-      .where('market_data.company_id = :companyId', { companyId })
-      .orderBy('market_data.record_time', 'DESC')
-      .getOne();
-
-    if (latestMarketData) {
-      const latestDate = new Date(latestMarketData.record_time);
-      const dayBeforeLatest = new Date(latestDate);
-      dayBeforeLatest.setDate(dayBeforeLatest.getDate() - 1);
-      dayBeforeLatest.setHours(0, 0, 0, 0);
-      const dayBeforeLatestData = await AppDataSource.manager.findOne(
-        MarketData,
-        {
-          where: {
-            company_id: companyId,
-            record_time: dayBeforeLatest,
-          },
-        },
-      );
-      return dayBeforeLatestData as unknown as MarketData;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error fetching last market data:', error.message);
-    throw error;
-  }
-}
-
 type Identifier = { symbol: string } | { companyId: string };
 
 import { subDays } from 'date-fns'; // date-fns库用于日期操作
@@ -159,12 +87,21 @@ async function getMarketDataByIdentifier(
   offset: number = 0,
 ): Promise<MarketData[]> {
   try {
+    let company: Company | null = null;
     let companyId: string | null = null;
 
     if ('symbol' in identifier) {
-      companyId = await getCompanyIdFromSymbol(identifier.symbol); // 获取company_id
+      company = await getCompanyFromSymbol(identifier.symbol); // 获取company_id
+      if (!company) {
+        throw Error(`getMarketDataByIdentifier cannot find company`);
+      }
+      companyId = company.company_id;
     } else {
-      companyId = identifier.companyId;
+      company = await getCompanyFromId(identifier.companyId);
+      if (!company) {
+        throw Error(`getMarketDataByIdentifier cannot find company`);
+      }
+      companyId = company.company_id;
     }
 
     // 计算日期范围
@@ -186,80 +123,24 @@ async function getMarketDataByIdentifier(
       return marketData;
     }
 
+    await saveMarketNewDataBySymbol(company.company_symbol); // Assuming this function now returns the saved data
+
     // 如果没有数据，则获取新的数据
-    marketData = await saveMarketNewDataBySymbol(companyId!); // Assuming this function now returns the saved data
+    marketData = await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'md')
+      .where('md.company_id = :companyId', { companyId })
+      .andWhere('md.record_time BETWEEN :startDate AND :effectiveEndDate', {
+        startDate,
+        effectiveEndDate,
+      })
+      .orderBy('md.record_time', 'ASC')
+      .getMany();
 
     return marketData;
   } catch (error) {
     throw new Error(`Error while fetching market data: ${error.message}`);
   }
 }
-
-// async function saveCompanyQuoteDataByCompanySymbolList(
-//   companySymbols: string[],
-// ): Promise<void> {
-//   try {
-//     // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
-
-//     // Convert companySymbols into an array of functions returning promises
-//     const promiseFunctions = companySymbols.map(
-//       (symbol) => async () => await getCompanyQuoteData([symbol]),
-//     );
-
-//     // Fetch company quote data in chunks
-//     const allCompanyQuoteDatas = await chunkPromises(
-//       promiseFunctions,
-//       CONCURRENCY_LIMIT,
-//     );
-
-//     const companyQuoteDatas = allCompanyQuoteDatas.flat();
-
-//     const chunkSize = 500;
-//     for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
-//       const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
-
-//       // 获取当前块的所有公司股票符号
-//       const currentChunkSymbols = currentChunk.map((data) => data.symbol);
-
-//       // 为这些符号一次性查找所有公司
-//       const companies = await AppDataSource.manager.find(Company, {
-//         where: { company_symbol: In(currentChunkSymbols) },
-//       });
-
-//       // 创建一个映射来快速查找公司
-//       const companyMap = new Map(
-//         companies.map((company) => [company.company_symbol, company]),
-//       );
-
-//       const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
-
-//       currentChunk.forEach((companyQuoteData) => {
-//         const company = companyMap.get(companyQuoteData.symbol);
-//         if (!company) {
-//           console.error(
-//             `Company with symbol ${companyQuoteData.symbol} not found`,
-//           );
-//         } else {
-//           toBeSaved.push({
-//             ...companyQuoteData,
-//             company_id: company.company_id,
-//           });
-//         }
-//       });
-
-//       // Using TypeORM's save method to batch save or update market data
-//       if (toBeSaved.length > 0) {
-//         await AppDataSource.manager.save(CompanyQuote, toBeSaved);
-//       }
-//     }
-
-//     console.log('Company Quote data save operation finished');
-//   } catch (error) {
-//     throw new Error(
-//       `Error while updating Company Quote data: ${error.message}`,
-//     );
-//   }
-// }
 
 async function saveCompanyQuoteDataByCompanySymbolList(
   companySymbols: string[],
@@ -338,9 +219,8 @@ async function updateAllCompanyQuoteData(): Promise<void> {
   //   )
   // ) {
   try {
-    const companies = await getAllCompanies();
-    const companySymbols = companies.map((company) => company.company_symbol);
-    await saveCompanyQuoteDataByCompanySymbolList(companySymbols);
+    const companies = await getAllCompanySymbols();
+    await saveCompanyQuoteDataByCompanySymbolList(companies);
     console.log('Company Quote data updated successfully');
   } catch (error) {
     console.error('Error updating Company Quote data:', error);
@@ -401,6 +281,142 @@ async function deleteOldCompanyQuoteData(): Promise<void> {
     console.error('Error deleting old Company Quote data:', error);
   }
 }
+
+async function getDayBeforeLatestMarketData(
+  companySymbol: string,
+): Promise<MarketData | null> {
+  try {
+    const companyId = await getCompanyIdFromSymbol(companySymbol);
+    if (!companyId) return null;
+
+    const latestMarketData = await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'market_data')
+      .where('market_data.company_id = :companyId', { companyId })
+      .orderBy('market_data.record_time', 'DESC')
+      .getOne();
+
+    if (latestMarketData) {
+      const latestDate = new Date(latestMarketData.record_time);
+      const dayBeforeLatest = new Date(latestDate);
+      dayBeforeLatest.setDate(dayBeforeLatest.getDate() - 1);
+      dayBeforeLatest.setHours(0, 0, 0, 0);
+      const dayBeforeLatestData = await AppDataSource.manager.findOne(
+        MarketData,
+        {
+          where: {
+            company_id: companyId,
+            record_time: dayBeforeLatest,
+          },
+        },
+      );
+      return dayBeforeLatestData as unknown as MarketData;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching last market data:', error.message);
+    throw error;
+  }
+}
+
+async function getLatestMarketData(
+  companySymbol: string,
+): Promise<MarketData | null> {
+  try {
+    const companyId = await getCompanyIdFromSymbol(companySymbol);
+    if (companyId) {
+      return await AppDataSource.manager
+        .createQueryBuilder(MarketData, 'market_data')
+        .where('market_data.company_id = :companyId', { companyId })
+        .orderBy('market_data.record_time', 'DESC')
+        .getOne();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching last market data:', error.message);
+    throw error;
+  }
+}
+
+async function getLastMarketDataForServices(
+  companyId: string,
+): Promise<MarketData | null> {
+  try {
+    return await AppDataSource.manager
+      .createQueryBuilder(MarketData, 'market_data')
+      .where('market_data.company_id = :companyId', { companyId })
+      .orderBy('market_data.record_time', 'DESC')
+      .getOne();
+  } catch (error) {
+    console.error('Error fetching last market data:', error.message);
+    throw error;
+  }
+}
+
+// async function saveCompanyQuoteDataByCompanySymbolList(
+//   companySymbols: string[],
+// ): Promise<void> {
+//   try {
+//     // const companyQuoteDatas = await getCompanyQuoteData(companySymbols);
+
+//     // Convert companySymbols into an array of functions returning promises
+//     const promiseFunctions = companySymbols.map(
+//       (symbol) => async () => await getCompanyQuoteData([symbol]),
+//     );
+
+//     // Fetch company quote data in chunks
+//     const allCompanyQuoteDatas = await chunkPromises(
+//       promiseFunctions,
+//       CONCURRENCY_LIMIT,
+//     );
+
+//     const companyQuoteDatas = allCompanyQuoteDatas.flat();
+
+//     const chunkSize = 500;
+//     for (let i = 0; i < companyQuoteDatas.length; i += chunkSize) {
+//       const currentChunk = companyQuoteDatas.slice(i, i + chunkSize);
+
+//       // 获取当前块的所有公司股票符号
+//       const currentChunkSymbols = currentChunk.map((data) => data.symbol);
+
+//       // 为这些符号一次性查找所有公司
+//       const companies = await AppDataSource.manager.find(Company, {
+//         where: { company_symbol: In(currentChunkSymbols) },
+//       });
+
+//       // 创建一个映射来快速查找公司
+//       const companyMap = new Map(
+//         companies.map((company) => [company.company_symbol, company]),
+//       );
+
+//       const toBeSaved: DeepPartial<CompanyQuote>[] = []; // This array will store the data to be saved
+
+//       currentChunk.forEach((companyQuoteData) => {
+//         const company = companyMap.get(companyQuoteData.symbol);
+//         if (!company) {
+//           console.error(
+//             `Company with symbol ${companyQuoteData.symbol} not found`,
+//           );
+//         } else {
+//           toBeSaved.push({
+//             ...companyQuoteData,
+//             company_id: company.company_id,
+//           });
+//         }
+//       });
+
+//       // Using TypeORM's save method to batch save or update market data
+//       if (toBeSaved.length > 0) {
+//         await AppDataSource.manager.save(CompanyQuote, toBeSaved);
+//       }
+//     }
+
+//     console.log('Company Quote data save operation finished');
+//   } catch (error) {
+//     throw new Error(
+//       `Error while updating Company Quote data: ${error.message}`,
+//     );
+//   }
+// }
 
 export {
   getLastMarketDataForServices,

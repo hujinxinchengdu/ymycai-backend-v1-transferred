@@ -7,52 +7,6 @@ import { Company, FinancialReport, FinancialAnalysis } from '../models';
 import { Between, MoreThan, LessThan } from 'typeorm';
 import { IFinancialAnalysisModel } from '../models';
 
-// async function saveAllFinancialReportInfoBySymbol(
-//   companySymbol: string,
-//   isQuarterly: boolean,
-// ): Promise<void> {
-//   if (typeof isQuarterly !== 'boolean') {
-//     throw new Error('The isQuarterly parameter must be a boolean.');
-//   }
-
-//   try {
-//     const company = await AppDataSource.manager.findOne(Company, {
-//       where: { company_symbol: companySymbol },
-//     });
-
-//     if (!company) {
-//       throw new Error(`Company with symbol ${companySymbol} not found`);
-//     }
-
-//     const financialReports = await getFinancialReportData(
-//       companySymbol,
-//       isQuarterly,
-//       company.company_id,
-//     );
-
-//     for (const report of financialReports) {
-//       const existingReport = await AppDataSource.manager.findOne(
-//         FinancialReport,
-//         {
-//           where: {
-//             publish_time: report.publish_time,
-//             company_id: report.company_id,
-//           },
-//         },
-//       );
-
-//       console.log('start saving');
-
-//       if (!existingReport) {
-//         await AppDataSource.manager.save(report);
-//       }
-//     }
-//     console.log('finish');
-//   } catch (error) {
-//     throw new Error(`Error while fetching company: ${error.message}`);
-//   }
-// }
-
 async function updateFinancialReportInfoBySymbol(
   companySymbol: string,
   isQuarterly: boolean,
@@ -276,6 +230,52 @@ async function updateAllCompaniesFinancialReportsInBatches(): Promise<void> {
     );
   }
 }
+
+// async function saveAllFinancialReportInfoBySymbol(
+//   companySymbol: string,
+//   isQuarterly: boolean,
+// ): Promise<void> {
+//   if (typeof isQuarterly !== 'boolean') {
+//     throw new Error('The isQuarterly parameter must be a boolean.');
+//   }
+
+//   try {
+//     const company = await AppDataSource.manager.findOne(Company, {
+//       where: { company_symbol: companySymbol },
+//     });
+
+//     if (!company) {
+//       throw new Error(`Company with symbol ${companySymbol} not found`);
+//     }
+
+//     const financialReports = await getFinancialReportData(
+//       companySymbol,
+//       isQuarterly,
+//       company.company_id,
+//     );
+
+//     for (const report of financialReports) {
+//       const existingReport = await AppDataSource.manager.findOne(
+//         FinancialReport,
+//         {
+//           where: {
+//             publish_time: report.publish_time,
+//             company_id: report.company_id,
+//           },
+//         },
+//       );
+
+//       console.log('start saving');
+
+//       if (!existingReport) {
+//         await AppDataSource.manager.save(report);
+//       }
+//     }
+//     console.log('finish');
+//   } catch (error) {
+//     throw new Error(`Error while fetching company: ${error.message}`);
+//   }
+// }
 
 export {
   // saveAllFinancialReportInfoBySymbol,
