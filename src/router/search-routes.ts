@@ -7,11 +7,14 @@ import { getSymbolList } from '../controllers';
 import { GetCompanySearchModel } from '../models';
 
 const router = express.Router();
+
 router.get(
-  '/:companySymbol',
+  '/:companySymbol?',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companySymbol = req.params.companySymbol;
+      const companySymbol = req.params.companySymbol
+        ? req.params.companySymbol
+        : '';
 
       const existingCompanies: GetCompanySearchModel = (await getSymbolList(
         companySymbol,

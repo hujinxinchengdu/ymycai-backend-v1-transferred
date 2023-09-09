@@ -26,17 +26,29 @@ async function getSymbolList(
       new Set(rawCompanyListNASDAQ.concat(rawCompanyListNYSE)),
     );
 
-    const queryResults = await AppDataSource.manager
-      .createQueryBuilder(Company, 'company')
-      .select([
-        'company.company_name',
-        'company.company_symbol',
-        'company.company_id',
-      ])
-      .where('company.company_symbol IN (:...companyList)', {
-        companyList: companyList,
-      })
-      .getMany();
+    const queryResults =
+      companySymbol === ''
+        ? await AppDataSource.manager
+            .createQueryBuilder(Company, 'company')
+            .select([
+              'company.company_name',
+              'company.company_symbol',
+              'company.company_id',
+            ])
+            .orderBy('company.company_symbol', 'ASC')
+            .getMany()
+        : await AppDataSource.manager
+            .createQueryBuilder(Company, 'company')
+            .select([
+              'company.company_name',
+              'company.company_symbol',
+              'company.company_id',
+            ])
+            .where('company.company_symbol IN (:...companyList)', {
+              companyList: companyList,
+            })
+            .orderBy('company.company_symbol', 'ASC')
+            .getMany();
 
     const existingCompanies: CompanySearchModel[] = queryResults.map(
       (elem: Company) => {
