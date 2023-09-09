@@ -21,4 +21,24 @@ async function getCompanyIdFromSymbol(
   }
 }
 
-export { getCompanyIdFromSymbol };
+async function getCompanyFromSymbol(
+  companySymbol: string,
+): Promise<Company | null> {
+  try {
+    const company = await AppDataSource.manager.findOne(Company, {
+      where: { company_symbol: companySymbol },
+    });
+    if (company) {
+      return company;
+    }
+    return null;
+  } catch (error) {
+    console.error(
+      'Error fetching companyId from companySymbol:',
+      error.message,
+    );
+    throw error;
+  }
+}
+
+export { getCompanyIdFromSymbol, getCompanyFromSymbol };

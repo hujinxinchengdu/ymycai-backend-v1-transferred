@@ -12,10 +12,8 @@ export async function getPeerStockData(
     const peerStockApiUrl = `${BASE_URL}/api/v4/stock_peers?symbol=${companySymbol}&apikey=${API_KEY}`;
 
     const response = await queueRequest(peerStockApiUrl);
-    console.log(response.data);
 
     const peerStockData = response.data[0].peersList;
-    console.log(peerStockData);
 
     // Create a new PeerStock instance and fill it with the data
     const peerStock = new PeerStock();
@@ -27,7 +25,6 @@ export async function getPeerStockData(
 
     return peerStock;
   } catch (error) {
-    console.log(error);
     console.error('Error fetching peer stock data:', error.message);
     throw error;
   }

@@ -124,7 +124,7 @@ router.get('/all', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * @route GET /api/companies/all_symbol
+ * @route GET /api/companies/all_symbol?page=0&pageSize=50&getAll=all
  * @description 获取所有公司symbol列表
  *
  * @returns {GetAllCompanySymbolsResponseModel} 公司symbol列表json列表
@@ -133,10 +133,23 @@ router.get(
   '/all_symbol',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const company_symbols: GetAllCompanySymbolsResponseModel =
-        (await getAllCompanySymbols()) as unknown as GetAllCompanySymbolsResponseModel;
+      const page = parseInt(req.query.page as string) || 0;
+      const pageSize = parseInt(req.query.pageSize as string) || 50;
+      const getAll = req.query.getAll as 'all' | null;
 
-      return res.status(200).json(company_symbols);
+      const company_symbols: GetAllCompanySymbolsResponseModel =
+        (await getAllCompanySymbols(
+          page,
+          pageSize,
+          getAll,
+        )) as unknown as GetAllCompanySymbolsResponseModel;
+
+      return res.status(200).json({
+        page,
+        pageSize,
+        getAll,
+        data: company_symbols,
+      });
     } catch (error) {
       return next(error);
     }

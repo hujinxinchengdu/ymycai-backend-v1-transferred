@@ -9,16 +9,22 @@ import { TradingNote, Watchlist } from '..';
 
 @Entity('users')
 class User {
-  @PrimaryColumn({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar', unique: true })
   user_id: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   username: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
   @Column({ type: 'varchar' })
+  first_name: string;
+
+  @Column({ type: 'varchar' })
+  last_name: string;
+
+  @Column({ type: 'boolean' })
   emailVerified: boolean;
 
   @Column({ type: 'varchar' })
@@ -33,7 +39,7 @@ class User {
   @Column({ type: 'varchar' })
   password_token: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   time_zone: string;
 
   // Assuming User to TradingNote is a one-to-many relationship

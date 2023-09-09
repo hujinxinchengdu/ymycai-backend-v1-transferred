@@ -1,28 +1,19 @@
 import { AppDataSource } from '../configuration';
 import { v4 as uuidv4 } from 'uuid';
 import { SelectQueryBuilder, In } from 'typeorm';
-import { Company, Tag, CompanyQuote, PeerStock, MarketData } from '../models';
+import {
+  Company,
+  Tag,
+  CompanyQuote,
+  PeerStock,
+  CompanyInfoModel,
+} from '../models';
 import { getPeerStockData } from '../services';
 import {
   getLatestCompanyQuoteDataByCompanySymbolList,
   saveCompanyQuoteDataByCompanySymbolList,
   getMarketDataByIdentifier,
 } from './market-data-usecase';
-
-interface TagInfoModel {
-  tag_id: string;
-  tag_cn: string;
-  tag_en: string;
-}
-
-interface CompanyInfoModel {
-  company_id: string;
-  company_name: string;
-  company_symbol: string;
-  company_information: string;
-  industry_position: string;
-  tags: TagInfoModel[];
-}
 
 interface CompanyInfoListModel {
   companies: CompanyInfoModel[];
@@ -117,11 +108,27 @@ async function getCompaniesByPage(
   }
 }
 
-async function getAllCompanySymbols(): Promise<string[]> {
+async function getAllCompanySymbols(
+  page: number = 0,
+  pageSize: number = 50,
+  getAll: 'all' | null = null,
+): Promise<string[]> {
   try {
-    const companies = await AppDataSource.manager.find(Company);
-    const companySymbols = companies.map((company) => company.company_symbol);
-    return companySymbols;
+    const orderOptions = { company_symbol: 'ASC' as const }; // Sorting by company_symbol in ascending order
+
+    if (getAll === 'all') {
+      const allCompanies = await AppDataSource.manager.find(Company, {
+        order: orderOptions,
+      });
+      return allCompanies.map((company) => company.company_symbol);
+    } else {
+      const companies = await AppDataSource.manager.find(Company, {
+        skip: page * pageSize,
+        take: pageSize,
+        order: orderOptions,
+      });
+      return companies.map((company) => company.company_symbol);
+    }
   } catch (error) {
     throw new Error(`Error while fetching company symbols: ${error.message}`);
   }
@@ -341,7 +348,6 @@ export async function getCompanyAndPeerLatestQuotes(
     //   symbol: companySymbol,
     // });
 
-    console.log(latestQuotes);
     console.log('finish');
 
     return {

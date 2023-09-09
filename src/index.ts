@@ -9,6 +9,8 @@ import newsRoutes from './router/news-routes';
 import marketDataRoutes from './router/market-data-routes';
 import financialReportRoutes from './router/financial-report-routes';
 import insiderTransactionRoutes from './router/insider-transaction-routes';
+import searchRoutes from './router/search-routes';
+import watchlistRouter from './router/watchlist-routes';
 import { authRouter } from './router/auth-routes';
 import { Request, Response, NextFunction } from 'express';
 import { authMiddleware } from './configuration';
@@ -71,6 +73,8 @@ app.use('/api/news', newsRoutes);
 app.use('/api/market_data', marketDataRoutes);
 app.use('/api/financial_reports', financialReportRoutes);
 app.use('/api/insider_transactions', insiderTransactionRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/watchlist', watchlistRouter);
 app.use('/user', authMiddleware, authRouter);
 
 // Global error handler

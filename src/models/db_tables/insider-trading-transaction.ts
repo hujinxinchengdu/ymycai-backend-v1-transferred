@@ -23,7 +23,6 @@ import { Company } from '..';
     Security Name — the name of securities that was transacted, ex. "Common Stock".
     Link — the link to the original report in SEC archives.
  */
-@Index('index_on_company_symbol', ['symbol'])
 @Entity('insider_trading_transactions')
 class InsiderTradingTransaction {
   @PrimaryColumn({ type: 'varchar' })
@@ -56,7 +55,7 @@ class InsiderTradingTransaction {
   @Column({ type: 'varchar' })
   typeOfOwner: string;
 
-  @Column({ type: 'char', length: 1 })
+  @Column({ type: 'varchar' })
   acquistionOrDisposition: string;
 
   @Column({ type: 'varchar' })

@@ -3,19 +3,19 @@ import {
   getTransactionBySymbol,
   saveAllCompanyTransaction,
   saveAllTransaction,
-} from '../controllers/insider_trading_usecase';
+} from '../controllers/insider-trading-usecase';
 
 const router = express.Router();
 
 /**
- * @route GET /api/insider_transactions/save_all_transaction
+ * @route POST /api/insider_transactions/save_all_transaction
  * @description
  *
  * @param {}
  *
  * @returns {}
  */
-router.get('/save_all_transaction', async (req, res, next) => {
+router.post('/save_all_transaction', async (req, res, next) => {
   try {
     const insiderTransactions = await saveAllTransaction();
     return res.status(200).json(insiderTransactions);

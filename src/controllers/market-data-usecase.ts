@@ -7,7 +7,7 @@ import {
   getAllCompanies,
   getCompaniesByPage,
 } from './company-infomation-usecase';
-import { getCompanyIdFromSymbol } from './util/get-companyid-by-symbol';
+import { getCompanyIdFromSymbol } from './util/get-company-by-symbol';
 import { chunkPromises } from '../utils';
 import { finished } from 'stream';
 import { start } from 'repl';
@@ -21,11 +21,13 @@ const CONCURRENCY_LIMIT = 5; // Adjust based on how many promises you want to pr
 //   }
 // }
 
-async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
+async function saveMarketNewDataBySymbol(
+  company_symbol: string,
+): Promise<MarketData[]> {
   try {
     const BATCH_SIZE = 500;
     const company = await AppDataSource.manager.findOne(Company, {
-      where: { company_id: company_id },
+      where: { company_symbol: company_symbol },
     });
 
     if (!company) {
@@ -36,11 +38,18 @@ async function saveMarketNewDataBySymbol(company_id: string): Promise<void> {
       company.company_symbol,
     );
 
+    // 对数据按照时间（ASC）排序
+    companyMarketData.sort(
+      (a, b) => a.record_time.getTime() - b.record_time.getTime(),
+    );
+
     // 对于每家公司，将其市场数据分批保存
     for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
       const batch = companyMarketData.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(MarketData, batch);
     }
+
+    return companyMarketData; // Return the newly saved data
   } catch (error) {
     throw error;
   }
@@ -142,8 +151,12 @@ async function getDayBeforeLatestMarketData(
 
 type Identifier = { symbol: string } | { companyId: string };
 
+import { subDays } from 'date-fns'; // date-fns库用于日期操作
+
 async function getMarketDataByIdentifier(
   identifier: Identifier,
+  limit: number = 1000,
+  offset: number = 0,
 ): Promise<MarketData[]> {
   try {
     let companyId: string | null = null;
@@ -154,28 +167,27 @@ async function getMarketDataByIdentifier(
       companyId = identifier.companyId;
     }
 
-    // 尝试从数据库中获取已有的市场数据
+    // 计算日期范围
+    const endDate = new Date(); // 今天
+    const startDate = subDays(endDate, limit + offset); // 从今天往前数 (limit + offset) 天
+    const effectiveEndDate = subDays(endDate, offset); // 从今天往前数 offset 天，作为实际的结束日期
+
     let marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
-      .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
-      .orderBy('md.record_time', 'DESC')
+      .andWhere('md.record_time BETWEEN :startDate AND :effectiveEndDate', {
+        startDate,
+        effectiveEndDate,
+      })
+      .orderBy('md.record_time', 'ASC')
       .getMany();
 
-    // 如果已有数据，则直接返回
     if (marketData.length > 0) {
       return marketData;
     }
 
     // 如果没有数据，则获取新的数据
-    await saveMarketNewDataBySymbol(companyId!);
-
-    marketData = await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'md')
-      .distinctOn(['md.record_time'])
-      .where('md.company_id = :companyId', { companyId })
-      .orderBy('md.record_time', 'DESC')
-      .getMany();
+    marketData = await saveMarketNewDataBySymbol(companyId!); // Assuming this function now returns the saved data
 
     return marketData;
   } catch (error) {
@@ -358,24 +370,15 @@ async function getLatestCompanyQuoteDataByCompanySymbolList(
   symbols: string[],
 ): Promise<CompanyQuote[]> {
   try {
-    // 1. 获取所有与提供的符号匹配的CompanyQuote记录
-    const companyQuotes = await AppDataSource.manager.find(CompanyQuote, {
-      where: { symbol: In(symbols) },
-      order: { record_time: 'DESC' },
-    });
-
-    // 2. 创建一个Map，用于存储每个符号的最新报价
-    const latestQuotesMap = new Map<string, CompanyQuote>();
-
-    // 3. 遍历所有的CompanyQuote记录，保存每个符号的最新报价
-    for (const quote of companyQuotes) {
-      if (!latestQuotesMap.has(quote.symbol)) {
-        latestQuotesMap.set(quote.symbol, quote);
-      }
-    }
-
-    // 4. 将Map的值转换为数组并返回
-    return Array.from(latestQuotesMap.values());
+    const symbolsStr = symbols.map((s) => `'${s}'`).join(', ');
+    const query = `
+      SELECT DISTINCT ON (symbol) *
+      FROM company_quote
+      WHERE symbol IN (${symbolsStr})
+      ORDER BY symbol, record_time DESC;
+    `;
+    const companyQuotes = await AppDataSource.manager.query(query);
+    return companyQuotes;
   } catch (error) {
     throw new Error(
       `Error while fetching latest company quotes: ${error.message}`,

@@ -26,7 +26,9 @@ export async function getMarketNewData(
     } else {
       fromDate = '1200-01-01'; // 或其他远古日期，作为默认起始日期
     }
+
     const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
+
     const response = await queueRequest(marketDataApiUrl);
 
     const tempdate = response.data;
@@ -80,35 +82,33 @@ export async function getCompanyQuoteData(
     const companyQuoteData = await queueRequest(companyQuoteDataApiUrl);
     const quoteRawData = companyQuoteData.data;
 
-    console.log(quoteRawData);
-
     for (const quoteItem of quoteRawData) {
       const tempMarketData = new CompanyQuote();
 
       tempMarketData.market_data_id = uuidv4();
       tempMarketData.symbol = quoteItem.symbol;
       tempMarketData.name = quoteItem.name;
-      tempMarketData.price = quoteItem.price;
-      tempMarketData.changesPercentage = quoteItem.changesPercentage;
-      tempMarketData.change = quoteItem.change;
-      tempMarketData.dayLow = quoteItem.dayLow;
-      tempMarketData.dayHigh = quoteItem.dayHigh;
-      tempMarketData.yearHigh = quoteItem.yearHigh;
-      tempMarketData.yearLow = quoteItem.yearLow;
-      tempMarketData.marketCap = quoteItem.marketCap;
-      tempMarketData.priceAvg50 = quoteItem.priceAvg50;
-      tempMarketData.priceAvg200 = quoteItem.priceAvg200;
-      tempMarketData.volume = quoteItem.volume;
-      tempMarketData.avgVolume = quoteItem.avgVolume;
-      tempMarketData.exchange = quoteItem.exchange;
-      tempMarketData.open = quoteItem.open;
-      tempMarketData.previousClose = quoteItem.previousClose;
-      tempMarketData.eps = quoteItem.eps;
-      tempMarketData.pe = quoteItem.pe;
+      tempMarketData.price = quoteItem.price || 0;
+      tempMarketData.changesPercentage = quoteItem.changesPercentage || 0;
+      tempMarketData.change = quoteItem.change || 0;
+      tempMarketData.dayLow = quoteItem.dayLow || 0;
+      tempMarketData.dayHigh = quoteItem.dayHigh || 0;
+      tempMarketData.yearHigh = quoteItem.yearHigh || 0;
+      tempMarketData.yearLow = quoteItem.yearLow || 0;
+      tempMarketData.marketCap = quoteItem.marketCap || 0;
+      tempMarketData.priceAvg50 = quoteItem.priceAvg50 || 0;
+      tempMarketData.priceAvg200 = quoteItem.priceAvg200 || 0;
+      tempMarketData.volume = quoteItem.volume || 0;
+      tempMarketData.avgVolume = quoteItem.avgVolume || 0;
+      tempMarketData.exchange = quoteItem.exchange || 0;
+      tempMarketData.open = quoteItem.open || 0;
+      tempMarketData.previousClose = quoteItem.previousClose || 0;
+      tempMarketData.eps = quoteItem.eps || 0;
+      tempMarketData.pe = quoteItem.pe || 0;
       tempMarketData.earningsAnnouncement = new Date(
         quoteItem.earningsAnnouncement,
       );
-      tempMarketData.sharesOutstanding = quoteItem.sharesOutstanding;
+      tempMarketData.sharesOutstanding = quoteItem.sharesOutstanding || 0;
       // Assuming the current date/time is when the data was fetched
       tempMarketData.record_time = new Date();
 

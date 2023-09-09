@@ -3,3 +3,5 @@ export * from './financial-report-routes';
 export * from './market-data-routes';
 export * from './news-routes';
 export * from './insider-transaction-routes';
+export * from './search-routes';
+export * from './watchlist-routes';
