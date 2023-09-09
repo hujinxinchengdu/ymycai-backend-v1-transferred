@@ -111,14 +111,24 @@ async function getCompaniesByPage(
 async function getAllCompanySymbols(
   page: number = 0,
   pageSize: number = 50,
+  getAll: 'all' | null = null,
 ): Promise<string[]> {
   try {
-    const companies = await AppDataSource.manager.find(Company, {
-      skip: page * pageSize,
-      take: pageSize,
-    });
-    const companySymbols = companies.map((company) => company.company_symbol);
-    return companySymbols;
+    const orderOptions = { company_symbol: 'ASC' as const }; // Sorting by company_symbol in ascending order
+
+    if (getAll === 'all') {
+      const allCompanies = await AppDataSource.manager.find(Company, {
+        order: orderOptions,
+      });
+      return allCompanies.map((company) => company.company_symbol);
+    } else {
+      const companies = await AppDataSource.manager.find(Company, {
+        skip: page * pageSize,
+        take: pageSize,
+        order: orderOptions,
+      });
+      return companies.map((company) => company.company_symbol);
+    }
   } catch (error) {
     throw new Error(`Error while fetching company symbols: ${error.message}`);
   }
