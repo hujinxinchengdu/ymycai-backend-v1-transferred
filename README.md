@@ -22,6 +22,12 @@ npm install --production
 npm run start:azure
 ```
 
+## Deployment
+需要让服务器提前安装
+```
+npm install -g nodemon
+```
+
 # API返回规范
 对应返回的内容，常见的做法是：
 

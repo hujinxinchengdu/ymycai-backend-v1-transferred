@@ -96,7 +96,7 @@ function errorHandler(
 }
 app.use(errorHandler);
 
-const YMYC_WEB_PORT = process.env.YMYC_WEB_PORT || 8000;
+const YMYC_WEB_PORT = process.env.PORT || process.env.YMYC_WEB_PORT;
 
 // Initialize database and start the server
 AppDataSource.initialize()
