@@ -9,8 +9,8 @@ export async function getFinancialReportData(
   companyId: string,
 ): Promise<FinancialReport[]> {
   try {
-    const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
-    const API_KEY = process.env.FINANCIAL_MODELING_KEY;
+    const BASE_URL = process.env.YMYC_FINANCIAL_API_BASE_URL;
+    const API_KEY = process.env.YMYC_FINANCIAL_MODELING_KEY;
     //获取损益表
     const incomeStatementApiUrl = isQuarterly
       ? `${BASE_URL}/api/v3/income-statement/${companySymbol}?period=quarter&limit=400&apikey=${API_KEY}`

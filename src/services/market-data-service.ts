@@ -4,8 +4,8 @@ import { getLastMarketDataForServices } from '../controllers';
 import { v4 as uuidv4 } from 'uuid';
 import { queueRequest } from '../utils';
 
-const API_KEY = process.env.FINANCIAL_MODELING_KEY;
-const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
+const API_KEY = process.env.YMYC_FINANCIAL_MODELING_KEY;
+const BASE_URL = process.env.YMYC_FINANCIAL_API_BASE_URL;
 export async function getMarketNewData(
   companyId: string,
   companySymbol: string,
