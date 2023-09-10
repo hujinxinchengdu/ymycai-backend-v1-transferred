@@ -23,10 +23,9 @@ npm run start:azure
 ```
 
 ## Deployment
-需要让服务器提前安装
-```
-npm install -g nodemon
-```
+1. 创建一个容器
+2. 添加配置文件
+3. 部署
 
 # API返回规范
 对应返回的内容，常见的做法是：
