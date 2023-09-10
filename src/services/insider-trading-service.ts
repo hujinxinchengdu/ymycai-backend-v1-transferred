@@ -7,8 +7,8 @@ import {
 } from '../controllers';
 import { v4 as uuidv4 } from 'uuid';
 
-const API_KEY = process.env.FINANCIAL_MODELING_KEY;
-const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
+const API_KEY = process.env.YMYC_FINANCIAL_MODELING_KEY;
+const BASE_URL = process.env.YMYC_FINANCIAL_API_BASE_URL;
 
 export async function getInsideTrader(): Promise<InsiderTradingTransaction[]> {
   //通过第三方api获取内幕交易

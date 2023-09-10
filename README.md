@@ -79,21 +79,21 @@ Status codes:
 ## .env.example
 
 ```ini
-PORT=Your Port
+YMYC_WEB_PORT=Your Port
 
-HOST=Your Database Host
-DATABASE_PORT=Your Database Port
-DB_USER=Your Database Username
-PASSWORD=Your Database Password
-DATABASE=Your Database Name
+YMYC_POSTDB_HOST=Your Database Host
+YMYC_DATABASE_PORT=Your Database Port
+YMYC_DB_USER=Your Database Username
+YMYC_DB_PASSWORD=Your Database Password
+YMYC_DB_DATABASE=Your Database Name
 
-FINANCIAL_MODELING_KEY=API KEY
-FINANCIAL_API_BASE_URL=Base Url
+YMYC_FINANCIAL_MODELING_KEY=API KEY
+YMYC_FINANCIAL_API_BASE_URL=Base Url
 
 ISSUER=your-issuer-url
-AUDIENCE=your-audience
-SECRET=your-secret
-TOKEN_SIGNING_ALG=HS256
+YMYC_AUDIENCE=your-audience
+YMYC_SECRET=your-secret
+YMYC_TOKEN_SIGNING_ALG=HS256
 ```
 
 ## 请求的方法
@@ -248,11 +248,11 @@ if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
   config();
 }
 
-const host: string = process.env.HOST as string;
-const port: number = parseInt(process.env.DATABASE_PORT as string, 10);
+const host: string = process.env.YMYC_POSTDB_HOST as string;
+const port: number = parseInt(process.env.YMYC_DATABASE_PORT as string, 10);
 const username: string = process.env.USERNAME as string;
-const password: string = process.env.PASSWORD as string;
-const database: string = process.env.DATABASE as string;
+const password: string = process.env.YMYC_DB_PASSWORD as string;
+const database: string = process.env.YMYC_DB_DATABASE as string;
 
 export const AppDataSource = new DataSource({
   type: 'postgres',

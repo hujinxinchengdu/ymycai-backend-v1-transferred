@@ -6,8 +6,8 @@ export async function getPeerStockData(
   companySymbol: string,
 ): Promise<PeerStock> {
   try {
-    const BASE_URL = process.env.FINANCIAL_API_BASE_URL;
-    const API_KEY = process.env.FINANCIAL_MODELING_KEY;
+    const BASE_URL = process.env.YMYC_FINANCIAL_API_BASE_URL;
+    const API_KEY = process.env.YMYC_FINANCIAL_MODELING_KEY;
 
     const peerStockApiUrl = `${BASE_URL}/api/v4/stock_peers?symbol=${companySymbol}&apikey=${API_KEY}`;
 

@@ -14,10 +14,10 @@ if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
   config();
 }
 const authMiddleware = auth({
-  issuer: process.env.ISSUER,
-  audience: process.env.AUDIENCE,
-  // secret: process.env.SECRET,
-  // tokenSigningAlg: process.env.TOKEN_SIGNING_ALG,
+  issuer: process.env.YMYC_ISSUER_BASE_URL,
+  audience: process.env.YMYC_AUDIENCE,
+  // secret: process.env.YMYC_SECRET,
+  // tokenSigningAlg: process.env.YMYC_TOKEN_SIGNING_ALG,
 });
 
 export { authMiddleware };

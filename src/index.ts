@@ -96,11 +96,13 @@ function errorHandler(
 }
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 8111;
+const YMYC_WEB_PORT = process.env.YMYC_WEB_PORT || 8111;
 
 // Initialize database and start the server
 AppDataSource.initialize()
   .then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(YMYC_WEB_PORT, () =>
+      console.log(`Server running on port ${YMYC_WEB_PORT}`),
+    );
   })
   .catch((error) => console.log(error));

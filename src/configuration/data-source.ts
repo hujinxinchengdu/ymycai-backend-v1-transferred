@@ -36,11 +36,11 @@ if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
   config();
 }
 
-const host: string = process.env.HOST as string;
-const port: number = parseInt(process.env.DATABASE_PORT as string, 10);
-const username: string = process.env.DB_USER as string;
-const password: string = process.env.PASSWORD as string;
-const database: string = process.env.DATABASE as string;
+const host: string = process.env.YMYC_POSTDB_HOST as string;
+const port: number = parseInt(process.env.YMYC_DATABASE_PORT as string, 10);
+const username: string = process.env.YMYC_DB_USER as string;
+const password: string = process.env.YMYC_DB_PASSWORD as string;
+const database: string = process.env.YMYC_DB_DATABASE as string;
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: host,
