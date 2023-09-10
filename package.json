@@ -16,7 +16,8 @@
     "start:dev": "cross-env NODE_ENV=dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start:cloud_dev": "cross-env NODE_ENV=cloud_dev nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start:local_product": "cross-env NODE_ENV=local_product nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
-    "start:product": "cross-env NODE_ENV=product nodemon --watch './**/*.ts' --exec ts-node src/index.ts"
+    "start:product": "cross-env NODE_ENV=product nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
+    "start:azure": "cross-env NODE_ENV=azure nodemon --watch './**/*.ts' --exec ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
