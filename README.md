@@ -10,9 +10,16 @@ docker run -p 8000:8000 --name APP_NAME -v MY_PATH:/app  <image-id>
 ```
 
 # bash运行
+## For Development
 ```
 npm install
 npm run start:cloud_dev / local_dev / local_product / product / dev / dev
+```
+
+## For Production
+```
+npm install --production
+npm run start:azure
 ```
 
 # API返回规范
