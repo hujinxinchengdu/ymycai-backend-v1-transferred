@@ -13,8 +13,9 @@ if (fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
   console.warn('Using default .env file');
   config();
 }
+
 const authMiddleware = auth({
-  issuer: process.env.YMYC_ISSUER_BASE_URL,
+  issuerBaseURL: process.env.YMYC_ISSUER_BASE_URL,
   audience: process.env.YMYC_AUDIENCE,
   // secret: process.env.YMYC_SECRET,
   // tokenSigningAlg: process.env.YMYC_TOKEN_SIGNING_ALG,
