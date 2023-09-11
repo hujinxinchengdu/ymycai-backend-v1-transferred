@@ -21,6 +21,11 @@ class User {
   @Column({ type: 'varchar' })
   first_name: string;
 
+  @Column({
+    type: 'varchar',
+  })
+  pictrue_url: string;
+
   @Column({ type: 'varchar' })
   last_name: string;
 
