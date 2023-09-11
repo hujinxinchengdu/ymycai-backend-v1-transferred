@@ -30,7 +30,10 @@ async function saveMarketNewDataBySymbol(
   company_symbol: string,
 ): Promise<void> {
   try {
+    console.log(`saveMarketNewDataBySymbol ${company_symbol}`);
     const BATCH_SIZE = 500;
+
+    // 查找公司
     const company = await AppDataSource.manager.findOne(Company, {
       where: { company_symbol: company_symbol },
     });
@@ -38,14 +41,36 @@ async function saveMarketNewDataBySymbol(
     if (!company) {
       throw new Error(`Cannot find company!`);
     }
+
+    // 查找最近的已有市场数据
+    const latestMarketDataInDb = await getLastMarketDataForServices(
+      company.company_id,
+    );
+
+    const latestDateInDb = latestMarketDataInDb
+      ? latestMarketDataInDb.record_time
+      : new Date(0);
+
+    // 获取新的市场数据
     const companyMarketData: MarketData[] = await getMarketNewData(
       company.company_id,
       company.company_symbol,
     );
 
-    // 对于每家公司，将其市场数据分批保存
-    for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
-      const batch = companyMarketData.slice(i, i + BATCH_SIZE);
+    const marketDataToSave: MarketData[] = [];
+
+    // 仅保存比数据库中最新数据更新的数据
+    for (const data of companyMarketData) {
+      if (data.record_time > latestDateInDb) {
+        marketDataToSave.push(data);
+      } else {
+        break;
+      }
+    }
+
+    // 批量保存数据
+    for (let i = 0; i < marketDataToSave.length; i += BATCH_SIZE) {
+      const batch = marketDataToSave.slice(i, i + BATCH_SIZE);
       await AppDataSource.manager.save(MarketData, batch);
     }
   } catch (error) {
@@ -53,24 +78,14 @@ async function saveMarketNewDataBySymbol(
   }
 }
 
-async function saveMarketNewData(): Promise<void> {
+async function saveAllMarketNewData(): Promise<void> {
   try {
     const companies: Company[] = await getAllCompanies();
 
     const BATCH_SIZE = 500; // 可根据需要调整这个值
 
     for (const company of companies) {
-      const companySymbol = company.company_symbol;
-      const companyMarketData: MarketData[] = await getMarketNewData(
-        company.company_id,
-        companySymbol,
-      );
-
-      // 对于每家公司，将其市场数据分批保存
-      for (let i = 0; i < companyMarketData.length; i += BATCH_SIZE) {
-        const batch = companyMarketData.slice(i, i + BATCH_SIZE);
-        await AppDataSource.manager.save(MarketData, batch);
-      }
+      saveMarketNewDataBySymbol(company.company_symbol);
     }
   } catch (error) {
     throw error;
@@ -341,11 +356,10 @@ async function getLastMarketDataForServices(
   companyId: string,
 ): Promise<MarketData | null> {
   try {
-    return await AppDataSource.manager
-      .createQueryBuilder(MarketData, 'market_data')
-      .where('market_data.company_id = :companyId', { companyId })
-      .orderBy('market_data.record_time', 'DESC')
-      .getOne();
+    return await AppDataSource.manager.findOne(MarketData, {
+      where: { company_id: companyId },
+      order: { record_time: 'DESC' }, // 假设有一个名为'date'的字段来存储数据的日期
+    });
   } catch (error) {
     console.error('Error fetching last market data:', error.message);
     throw error;
@@ -420,7 +434,7 @@ async function getLastMarketDataForServices(
 
 export {
   getLastMarketDataForServices,
-  saveMarketNewData,
+  saveAllMarketNewData,
   getDayBeforeLatestMarketData,
   getLatestMarketData,
   getMarketDataByIdentifier,

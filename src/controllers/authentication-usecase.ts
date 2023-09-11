@@ -16,6 +16,7 @@ const userProfile = async (userFromAuth0: any): Promise<User> => {
     user.username = userFromAuth0.nickname;
     user.signup_time = new Date();
     user.update_time = userFromAuth0.updated_at;
+    user.pictrue_url = userFromAuth0.picture;
 
     await AppDataSource.manager.save(User, user);
 

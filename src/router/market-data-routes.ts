@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import {
-  saveMarketNewData,
+  saveAllMarketNewData,
   getLatestMarketData,
   getDayBeforeLatestMarketData,
   saveCompanyQuoteDataByCompanySymbolList,
@@ -67,7 +67,7 @@ router.put(
   '/save_new_market_data',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await saveMarketNewData();
+      await saveAllMarketNewData();
       console.log('success');
       return res
         .status(200)

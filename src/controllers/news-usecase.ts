@@ -126,6 +126,32 @@ async function findAllNews(
   }
 }
 
+async function findNewsByTime(
+  hoursAgo: number, // Default to 1 hour ago
+  page: number,
+  pageSize: number,
+): Promise<News[]> {
+  try {
+    const currentTime = new Date();
+    const startTime = new Date(currentTime);
+
+    // Calculate the start time based on the specified hoursAgo
+    startTime.setHours(currentTime.getHours() - hoursAgo);
+    const skip = (page - 1) * pageSize; // Calculate the number of records to skip
+    const newsByTime = await AppDataSource.manager
+      .createQueryBuilder(News, 'news')
+      .where('news.published_time >= :startTime', { startTime })
+      .orderBy('news.published_time', 'DESC')
+      .skip(skip)
+      .take(pageSize)
+      .getMany();
+
+    return newsByTime;
+  } catch (error) {
+    throw new Error(`Error while fetching news by time: ${error.message}`);
+  }
+}
+
 async function updateNewsSummary(
   news_id: string,
   aiSummary: string,
@@ -152,4 +178,5 @@ export {
   findNewsByCompany,
   findAllNews,
   updateNewsSummary,
+  findNewsByTime,
 };

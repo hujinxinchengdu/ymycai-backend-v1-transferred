@@ -8,6 +8,7 @@ import {
   findNewsByCompany,
   updateNewsSummary,
   findAllNews,
+  findNewsByTime,
 } from '../controllers';
 
 const router = express.Router();
@@ -47,12 +48,44 @@ router.get(
   '/company/:company',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('dddd');
       const page = parseInt((req.query.page as string) || '1');
       const pageSize = parseInt((req.query.pageSize as string) || '10');
 
       const companyLabel = req.params.company;
       const news = await findNewsByCompany(companyLabel, page, pageSize);
       return res.status(200).json(news);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+/**
+ * @route GET /api/news/latest
+ * @description Fetch the latest news data from the past hour.
+ *
+ * @returns {News[]} An array of news articles from the past hour.
+ */
+router.get(
+  '/latest',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const hoursAgo = req.query.hoursAgo
+        ? parseInt(req.query.hoursAgo as string, 10)
+        : 1; // Fetch news from the past hour
+
+      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+      const pageSize = req.query.pageSize
+        ? parseInt(req.query.pageSize as string, 10)
+        : 10;
+      const latestNews = await findNewsByTime(hoursAgo, page, pageSize);
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Successfully retrieved the latest news from the past hour.',
+        data: latestNews,
+      });
     } catch (error) {
       return next(error);
     }

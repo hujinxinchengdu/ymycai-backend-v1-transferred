@@ -72,5 +72,5 @@ export const AppDataSource = new DataSource({
   ],
 
   synchronize: false,
-  logging: true,
+  logging: false,
 });
