@@ -1,12 +1,15 @@
 import cron from 'node-cron';
-import { saveMarketNewData, deleteOldCompanyQuoteData } from '../controllers';
+import {
+  saveAllMarketNewData,
+  deleteOldCompanyQuoteData,
+} from '../controllers';
 
 export function scheduleDailyCall() {
   try {
     cron.schedule(
       '0 0 * * *',
       async () => {
-        await saveMarketNewData();
+        await saveAllMarketNewData();
         console.log('API call successful!');
       },
       {

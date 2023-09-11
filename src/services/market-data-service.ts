@@ -11,24 +11,7 @@ export async function getMarketNewData(
   companySymbol: string,
 ): Promise<MarketData[]> {
   try {
-    const lastMarketData = await getLastMarketDataForServices(companyId);
-    let fromDate;
-    if (lastMarketData) {
-      const nextDayDate = new Date(lastMarketData.record_time);
-      nextDayDate.setDate(nextDayDate.getDate() + 1);
-      const current_date = new Date();
-      //由于如果from大于现在的日期将无效, 所以我们有这个判断
-      if (nextDayDate >= current_date) {
-        const MarketDataList: MarketData[] = [];
-        return MarketDataList;
-      }
-      fromDate = getFormattedDate(nextDayDate);
-    } else {
-      fromDate = '1200-01-01'; // 或其他远古日期，作为默认起始日期
-    }
-
-    const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}&from=${fromDate}`;
-
+    const marketDataApiUrl = `${BASE_URL}/api/v3/historical-price-full/${companySymbol}?apikey=${API_KEY}`;
     const response = await queueRequest(marketDataApiUrl);
 
     const tempdate = response.data;
@@ -40,7 +23,7 @@ export async function getMarketNewData(
     for (const data of historicalData) {
       const tempMarketData = new MarketData();
       tempMarketData.market_data_id = uuidv4();
-      tempMarketData.record_time = data['date'];
+      tempMarketData.record_time = new Date(data['date']);
       tempMarketData.open = data['open'];
       tempMarketData.high = data['high'];
       tempMarketData.low = data['low'];
