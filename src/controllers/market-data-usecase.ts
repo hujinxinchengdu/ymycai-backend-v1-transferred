@@ -63,6 +63,22 @@ async function saveMarketNewDataBySymbol(
     for (const data of companyMarketData) {
       if (data.record_time > latestDateInDb) {
         marketDataToSave.push(data);
+      } else if (
+        data.record_time.getTime() === latestDateInDb.getTime() &&
+        data.company_id === company.company_id
+      ) {
+        // Find the corresponding record in the database
+        const existingRecord = await AppDataSource.manager.findOne(MarketData, {
+          where: {
+            record_time: latestDateInDb,
+            company_id: company.company_id,
+          },
+        });
+        if (existingRecord) {
+          // Update existing record
+          Object.assign(existingRecord, data);
+          await AppDataSource.manager.save(MarketData, existingRecord);
+        }
       } else {
         break;
       }
@@ -85,7 +101,7 @@ async function saveAllMarketNewData(): Promise<void> {
     const BATCH_SIZE = 500; // 可根据需要调整这个值
 
     for (const company of companies) {
-      saveMarketNewDataBySymbol(company.company_symbol);
+      await saveMarketNewDataBySymbol(company.company_symbol);
     }
   } catch (error) {
     throw error;
@@ -265,19 +281,27 @@ async function getLatestCompanyQuoteDataByCompanySymbolList(
   symbols: string[],
 ): Promise<CompanyQuote[]> {
   try {
-    const symbolsStr = symbols.map((s) => `'${s}'`).join(', ');
-    const query = `
-      SELECT DISTINCT ON (symbol) *
-      FROM company_quote
-      WHERE symbol IN (${symbolsStr})
-      ORDER BY symbol, record_time DESC;
-    `;
-    const companyQuotes = await AppDataSource.manager.query(query);
-    return companyQuotes;
+    // 获取每个公司符号对应的最新日期的子查询
+    const subQuery = AppDataSource.manager
+      .createQueryBuilder(CompanyQuote, 'sq')
+      .select('sq.symbol')
+      .addSelect('MAX(sq.record_time)', 'latest_time')
+      .where('sq.symbol IN (:...symbols)', { symbols: symbols })
+      .groupBy('sq.symbol');
+
+    // 使用子查询的结果找出与每个公司符号对应的最新的CompanyQuote数据
+    const result = await AppDataSource.manager
+      .createQueryBuilder(CompanyQuote, 'cq')
+      .where('cq.symbol IN (:...symbols)', { symbols: symbols })
+      .andWhere('(cq.symbol, cq.record_time) IN (' + subQuery.getQuery() + ')')
+      .setParameters(subQuery.getParameters()) // Pass parameters from the subQuery
+      .getMany();
+
+    console.log(result);
+    return result;
   } catch (error) {
-    throw new Error(
-      `Error while fetching latest company quotes: ${error.message}`,
-    );
+    console.error('Error fetching latest company quotes:', error);
+    throw error;
   }
 }
 
