@@ -93,7 +93,7 @@ export async function getCompanyQuoteData(
       );
       tempMarketData.sharesOutstanding = quoteItem.sharesOutstanding || 0;
       // Assuming the current date/time is when the data was fetched
-      tempMarketData.record_time = new Date();
+      tempMarketData.record_time = new Date(quoteItem.timestamp * 1000);
 
       companyQuoteEntries.push(tempMarketData);
     }
