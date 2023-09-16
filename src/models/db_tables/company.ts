@@ -57,6 +57,9 @@ class Company {
   @UpdateDateColumn()
   info_update_time: Date;
 
+  @Column({ type: 'boolean', default: true })
+  hasData: boolean;
+
   @Column({ type: 'timestamp', nullable: true })
   earnings_announcement: Date;
 

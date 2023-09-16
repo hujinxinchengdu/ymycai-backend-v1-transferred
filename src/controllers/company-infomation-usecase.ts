@@ -115,14 +115,17 @@ async function getAllCompanySymbols(
 ): Promise<string[]> {
   try {
     const orderOptions = { company_symbol: 'ASC' as const }; // Sorting by company_symbol in ascending order
+    const whereOptions = { hasData: true }; // Only get companies where hasData is true
 
     if (getAll === 'all') {
       const allCompanies = await AppDataSource.manager.find(Company, {
+        where: whereOptions,
         order: orderOptions,
       });
       return allCompanies.map((company) => company.company_symbol);
     } else {
       const companies = await AppDataSource.manager.find(Company, {
+        where: whereOptions,
         skip: page * pageSize,
         take: pageSize,
         order: orderOptions,
