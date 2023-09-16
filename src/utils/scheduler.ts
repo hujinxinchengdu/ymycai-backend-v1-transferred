@@ -8,4 +8,4 @@ import {
 cron.schedule('0 3 * * *', deleteOldCompanyQuoteData);
 
 // Schedule the task to run every 15 minutes
-// cron.schedule('*/15 * * * *', updateAllCompanyQuoteData);
+cron.schedule('*/15 * * * *', updateAllCompanyQuoteData);
