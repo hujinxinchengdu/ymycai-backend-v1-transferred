@@ -126,25 +126,28 @@ async function findAllNews(
   }
 }
 
-async function findNewsByTime(
-  hoursAgo: number, // Default to 1 hour ago
-  page: number,
-  pageSize: number,
+async function findHourlyOrDailyNewsByTime(
+  hoursAgo: number,
+  includeHourly: boolean,
 ): Promise<News[]> {
   try {
     const currentTime = new Date();
     const startTime = new Date(currentTime);
-
     // Calculate the start time based on the specified hoursAgo
     startTime.setHours(currentTime.getHours() - hoursAgo);
-    const skip = (page - 1) * pageSize; // Calculate the number of records to skip
-    const newsByTime = await AppDataSource.manager
+
+    const queryBuilder = AppDataSource.manager
       .createQueryBuilder(News, 'news')
       .where('news.published_time >= :startTime', { startTime })
-      .orderBy('news.published_time', 'DESC')
-      .skip(skip)
-      .take(pageSize)
-      .getMany();
+      .orderBy('news.published_time', 'DESC');
+
+    // Optionally filter by news title containing "hourly"
+    if (includeHourly) {
+      queryBuilder.andWhere('news.title LIKE :title', { title: '%Hourly%' });
+    } else {
+      queryBuilder.andWhere('news.title LIKE :title', { title: '%Daily%' });
+    }
+    const newsByTime = await queryBuilder.getMany();
 
     return newsByTime;
   } catch (error) {
@@ -178,5 +181,5 @@ export {
   findNewsByCompany,
   findAllNews,
   updateNewsSummary,
-  findNewsByTime,
+  findHourlyOrDailyNewsByTime,
 };
