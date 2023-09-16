@@ -1,5 +1,6 @@
 import { DeepPartial, In, LessThan } from 'typeorm';
 import moment from 'moment-timezone';
+import { v4 as uuidv4 } from 'uuid';
 import { AppDataSource } from '../configuration';
 import { MarketData, Company, CompanyQuote } from '../models';
 import { getCompanyQuoteData, getMarketNewData } from '../services';
@@ -178,28 +179,30 @@ async function saveCompanyQuoteDataByCompanySymbolList(
 ): Promise<void> {
   try {
     const chunkSize = 500;
-    const batchSize = 100; // 每批获取100家公司的数据
-    let buffer: any[] = []; // 用于暂存数据
+    const batchSize = 100;
+    let buffer: any[] = [];
+    let totalSaved = 0; // 添加计数器变量
+    console.log(companySymbols.length);
 
-    // 将companySymbols切割成多个batch
     for (let i = 0; i < companySymbols.length; i += batchSize) {
       const batch = companySymbols.slice(i, i + batchSize);
       const data = await getCompanyQuoteData(batch);
-      buffer.push(...data); // 将新获取的数据添加到缓存数组
+      buffer.push(...data);
 
-      // 检查是否达到批量保存的阈值
       if (buffer.length >= chunkSize) {
-        await saveBufferToDatabase(buffer); // 保存数据
-        buffer = []; // 清空缓存数组
+        await saveBufferToDatabase(buffer);
+        totalSaved += buffer.length; // 更新计数器
+        buffer = [];
       }
     }
 
-    // 如果缓存数组中仍有数据，进行最后一次保存
     if (buffer.length > 0) {
       await saveBufferToDatabase(buffer);
+      totalSaved += buffer.length; // 更新计数器
     }
 
     console.log('Company Quote data save operation finished');
+    console.log(`Total number of records saved: ${totalSaved}`); // 打印总数
   } catch (error) {
     throw new Error(
       `Error while updating Company Quote data: ${error.message}`,
@@ -280,6 +283,8 @@ async function getCompanyQuoteDataByCompanySymbolList(
 async function getLatestCompanyQuoteDataByCompanySymbolList(
   symbols: string[],
 ): Promise<CompanyQuote[]> {
+  console.log(symbols.length);
+
   try {
     const query = `
       SELECT * FROM (
@@ -293,7 +298,52 @@ async function getLatestCompanyQuoteDataByCompanySymbolList(
     `;
 
     const result = await AppDataSource.manager.query(query, [symbols]);
-    return result as CompanyQuote[];
+
+    // 将结果转换为CompanyQuote数组
+    const companyQuotes = result as CompanyQuote[];
+
+    // 提取返回结果中的公司符号
+    const returnedSymbols = companyQuotes.map((q) => q.symbol);
+
+    // 找出缺失的公司符号
+    const missingSymbols = symbols.filter((s) => !returnedSymbols.includes(s));
+
+    if (missingSymbols.length > 0) {
+      console.log('以下公司的数据没有被取到：', missingSymbols);
+    }
+
+    // 对缺失的公司数据进行处理
+    for (const missingSymbol of missingSymbols) {
+      const tempMarketData = new CompanyQuote();
+      tempMarketData.market_data_id = uuidv4();
+      tempMarketData.symbol = missingSymbol;
+      tempMarketData.name = 'Unknown';
+      tempMarketData.price = 0;
+      tempMarketData.changesPercentage = 0;
+      tempMarketData.change = 0;
+      tempMarketData.dayLow = 0;
+      tempMarketData.dayHigh = 0;
+      tempMarketData.yearHigh = 0;
+      tempMarketData.yearLow = 0;
+      tempMarketData.marketCap = 0;
+      tempMarketData.priceAvg50 = 0;
+      tempMarketData.priceAvg200 = 0;
+      tempMarketData.volume = 0;
+      tempMarketData.avgVolume = 0;
+      tempMarketData.exchange = 'Unknown';
+      tempMarketData.open = 0;
+      tempMarketData.previousClose = 0;
+      tempMarketData.eps = 0;
+      tempMarketData.pe = 0;
+      tempMarketData.earningsAnnouncement = new Date(0);
+      tempMarketData.sharesOutstanding = 0;
+      tempMarketData.record_time = new Date();
+
+      companyQuotes.push(tempMarketData);
+    }
+    console.log(companyQuotes.length);
+
+    return companyQuotes;
   } catch (error) {
     console.error('Error fetching latest company quotes:', error);
     throw error;
