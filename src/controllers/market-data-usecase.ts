@@ -281,24 +281,19 @@ async function getLatestCompanyQuoteDataByCompanySymbolList(
   symbols: string[],
 ): Promise<CompanyQuote[]> {
   try {
-    // 获取每个公司符号对应的最新日期的子查询
-    const subQuery = AppDataSource.manager
-      .createQueryBuilder(CompanyQuote, 'sq')
-      .select('sq.symbol')
-      .addSelect('MAX(sq.record_time)', 'latest_time')
-      .where('sq.symbol IN (:...symbols)', { symbols: symbols })
-      .groupBy('sq.symbol');
+    const query = `
+      SELECT * FROM (
+          SELECT 
+              *,
+              ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY record_time DESC) AS rn
+          FROM company_quote
+          WHERE symbol = ANY($1)
+      ) AS tmp
+      WHERE rn = 1;
+    `;
 
-    // 使用子查询的结果找出与每个公司符号对应的最新的CompanyQuote数据
-    const result = await AppDataSource.manager
-      .createQueryBuilder(CompanyQuote, 'cq')
-      .where('cq.symbol IN (:...symbols)', { symbols: symbols })
-      .andWhere('(cq.symbol, cq.record_time) IN (' + subQuery.getQuery() + ')')
-      .setParameters(subQuery.getParameters()) // Pass parameters from the subQuery
-      .getMany();
-
-    console.log(result);
-    return result;
+    const result = await AppDataSource.manager.query(query, [symbols]);
+    return result as CompanyQuote[];
   } catch (error) {
     console.error('Error fetching latest company quotes:', error);
     throw error;
