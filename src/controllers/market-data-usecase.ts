@@ -143,6 +143,7 @@ async function getMarketDataByIdentifier(
 
     let marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
+      .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
       .andWhere('md.record_time BETWEEN :startDate AND :effectiveEndDate', {
         startDate,
@@ -160,6 +161,7 @@ async function getMarketDataByIdentifier(
     // 如果没有数据，则获取新的数据
     marketData = await AppDataSource.manager
       .createQueryBuilder(MarketData, 'md')
+      .distinctOn(['md.record_time'])
       .where('md.company_id = :companyId', { companyId })
       .andWhere('md.record_time BETWEEN :startDate AND :effectiveEndDate', {
         startDate,
