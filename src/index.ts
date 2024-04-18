@@ -14,7 +14,7 @@ import watchlistRouter from './router/watchlist-routes';
 import { authRouter } from './router/auth-routes';
 import { Request, Response, NextFunction } from 'express';
 import { authMiddleware } from './configuration';
-import './utils/scheduler'; //设置scheduler, 任务会自动启动
+// import './utils/scheduler'; //设置scheduler, 任务会自动启动
 
 require('express-async-errors');
 
