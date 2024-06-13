@@ -1,3 +1,5 @@
+# 注意！！！这从Skyline那里transfer过来的V1版本，作为PR和Issue的历史参考。请勿编辑或添加新内容
+
 # Stockaid Backend
 
 创建docker容器, 并且运行docker容器,并设置文件关联方法
