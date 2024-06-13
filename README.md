@@ -1,4 +1,4 @@
-# 注意！！！这从Skyline那里transfer过来的V1版本，作为PR和Issue的历史参考。请勿编辑或添加新内容
+# 注意！！！这是从Skyline那里transfer过来的V1版本，作为PR和Issue的历史参考。请勿编辑或添加新内容
 
 # Stockaid Backend
 
